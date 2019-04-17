@@ -201,13 +201,15 @@ Public Class USBDMXPro
     Public Function initPro()
         ' initialize serial port connected to Enttec USB DMX Pro widget
         Dim msg As String
-        Dim result As Integer
 
+        MSComm1.CommPort = PortNumber
 
         On Error Resume Next
+        MSComm1.PortOpen = True
+
         If MSComm1.PortOpen = False Then
             MSComm1.CommPort = PortNumber
-            MSComm1.PortOpen = True
+            MSComm1.CommPort = False
         End If
         If MSComm1.PortOpen = False Then
             'MsgBox("Failed to open USB DMX Pro on comm port: " & Str(PortNumber) & " - Check Settings, Device")
@@ -389,7 +391,11 @@ Public Class USBDMXPro
         ' sending DMX msgnumber 6 and dataLen bytes of data
         msg = Chr(126) & Chr(6) & Chr(dataLenLSB) & Chr(dataLenMSB) & startcode & levels & Chr(231)
         If deviceInitialized = True Then
-            MSComm1.Output = msg
+            Try
+                MSComm1.Output = msg
+            Catch ex As Exception
+                Debug.Print(ex.Message)
+            End Try
         End If
 
         ' copy array for history

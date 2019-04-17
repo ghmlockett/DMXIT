@@ -23,12 +23,12 @@ Partial Class frmMain
     <System.Diagnostics.DebuggerStepThrough()>
     Private Sub InitializeComponent()
         Me.components = New System.ComponentModel.Container()
+        Dim DataGridViewCellStyle1 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle2 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle3 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle4 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
+        Dim DataGridViewCellStyle5 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Dim resources As System.ComponentModel.ComponentResourceManager = New System.ComponentModel.ComponentResourceManager(GetType(frmMain))
-        Dim DataGridViewCellStyle16 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
-        Dim DataGridViewCellStyle17 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
-        Dim DataGridViewCellStyle18 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
-        Dim DataGridViewCellStyle19 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
-        Dim DataGridViewCellStyle20 As System.Windows.Forms.DataGridViewCellStyle = New System.Windows.Forms.DataGridViewCellStyle()
         Me.btnRed = New System.Windows.Forms.Button()
         Me.btnGreen = New System.Windows.Forms.Button()
         Me.btnBlue = New System.Windows.Forms.Button()
@@ -53,15 +53,14 @@ Partial Class frmMain
         Me.btnLasers3 = New System.Windows.Forms.Button()
         Me.btnTest = New System.Windows.Forms.Button()
         Me.TabPage2 = New System.Windows.Forms.TabPage()
+        Me.txtCurrentPosition = New System.Windows.Forms.TextBox()
+        Me.btnDeleteCalls = New System.Windows.Forms.Button()
+        Me.txtContentID = New System.Windows.Forms.TextBox()
+        Me.cmboPreset = New System.Windows.Forms.ComboBox()
         Me.btnSceneClear = New System.Windows.Forms.Button()
         Me.btnPlay = New System.Windows.Forms.Button()
         Me.btnMark = New System.Windows.Forms.Button()
-        Me.DataGridView1 = New System.Windows.Forms.DataGridView()
-        Me.id = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.position = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.sceneName = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.editScene = New System.Windows.Forms.DataGridViewTextBoxColumn()
-        Me.AxWindowsMediaPlayer1 = New AxWMPLib.AxWindowsMediaPlayer()
+        Me.dgSliceCalls = New System.Windows.Forms.DataGridView()
         Me.TabPage3 = New System.Windows.Forms.TabPage()
         Me.btnAll48Off = New System.Windows.Forms.Button()
         Me.btnAll48On = New System.Windows.Forms.Button()
@@ -128,6 +127,10 @@ Partial Class frmMain
         Me.dgChannels = New System.Windows.Forms.DataGridView()
         Me.dgFixtures = New System.Windows.Forms.DataGridView()
         Me.TabPage5 = New System.Windows.Forms.TabPage()
+        Me.txtChannelCount = New System.Windows.Forms.TextBox()
+        Me.btnBlackoutTgl = New System.Windows.Forms.Button()
+        Me.btnAllDevicesOff = New System.Windows.Forms.Button()
+        Me.btnDeviceOff = New System.Windows.Forms.Button()
         Me.Panel3 = New System.Windows.Forms.Panel()
         Me.lblCh18 = New VerticalLabelControl.VerticalLabel()
         Me.lblCh17 = New VerticalLabelControl.VerticalLabel()
@@ -206,7 +209,6 @@ Partial Class frmMain
         Me.txtSliceGroups = New System.Windows.Forms.TextBox()
         Me.btnSave = New System.Windows.Forms.Button()
         Me.btnRunSlice = New System.Windows.Forms.Button()
-        Me.btnBlackout = New System.Windows.Forms.Button()
         Me.btnLoadNextSlice = New System.Windows.Forms.Button()
         Me.Label37 = New System.Windows.Forms.Label()
         Me.cmboSliceFade = New System.Windows.Forms.ComboBox()
@@ -243,12 +245,12 @@ Partial Class frmMain
         Me.Label2 = New System.Windows.Forms.Label()
         Me.wmProgressTimer = New System.Windows.Forms.Timer(Me.components)
         Me.Label6 = New System.Windows.Forms.Label()
+        Me.AxWindowsMediaPlayer1 = New AxWMPLib.AxWindowsMediaPlayer()
         Me.TabControl1.SuspendLayout()
         Me.TabPage1.SuspendLayout()
         Me.Panel1.SuspendLayout()
         Me.TabPage2.SuspendLayout()
-        CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).BeginInit()
-        CType(Me.AxWindowsMediaPlayer1, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.dgSliceCalls, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.TabPage3.SuspendLayout()
         Me.TabPage4.SuspendLayout()
         CType(Me.dgChannels, System.ComponentModel.ISupportInitialize).BeginInit()
@@ -279,6 +281,7 @@ Partial Class frmMain
         Me.TabPage7.SuspendLayout()
         CType(Me.dgshowlayouts, System.ComponentModel.ISupportInitialize).BeginInit()
         CType(Me.dgavailabledevices, System.ComponentModel.ISupportInitialize).BeginInit()
+        CType(Me.AxWindowsMediaPlayer1, System.ComponentModel.ISupportInitialize).BeginInit()
         Me.SuspendLayout()
         '
         'btnRed
@@ -343,7 +346,7 @@ Partial Class frmMain
         '
         'btnLoad
         '
-        Me.btnLoad.Location = New System.Drawing.Point(16, 669)
+        Me.btnLoad.Location = New System.Drawing.Point(305, 669)
         Me.btnLoad.Name = "btnLoad"
         Me.btnLoad.Size = New System.Drawing.Size(107, 40)
         Me.btnLoad.TabIndex = 7
@@ -497,10 +500,14 @@ Partial Class frmMain
         '
         'TabPage2
         '
+        Me.TabPage2.Controls.Add(Me.txtCurrentPosition)
+        Me.TabPage2.Controls.Add(Me.btnDeleteCalls)
+        Me.TabPage2.Controls.Add(Me.txtContentID)
+        Me.TabPage2.Controls.Add(Me.cmboPreset)
         Me.TabPage2.Controls.Add(Me.btnSceneClear)
         Me.TabPage2.Controls.Add(Me.btnPlay)
         Me.TabPage2.Controls.Add(Me.btnMark)
-        Me.TabPage2.Controls.Add(Me.DataGridView1)
+        Me.TabPage2.Controls.Add(Me.dgSliceCalls)
         Me.TabPage2.Controls.Add(Me.btnLoad)
         Me.TabPage2.Controls.Add(Me.AxWindowsMediaPlayer1)
         Me.TabPage2.Location = New System.Drawing.Point(4, 29)
@@ -511,9 +518,43 @@ Partial Class frmMain
         Me.TabPage2.Text = "Video Control"
         Me.TabPage2.UseVisualStyleBackColor = True
         '
+        'txtCurrentPosition
+        '
+        Me.txtCurrentPosition.BackColor = System.Drawing.SystemColors.InactiveBorder
+        Me.txtCurrentPosition.Location = New System.Drawing.Point(1261, 30)
+        Me.txtCurrentPosition.Name = "txtCurrentPosition"
+        Me.txtCurrentPosition.Size = New System.Drawing.Size(147, 26)
+        Me.txtCurrentPosition.TabIndex = 23
+        '
+        'btnDeleteCalls
+        '
+        Me.btnDeleteCalls.Location = New System.Drawing.Point(1514, 26)
+        Me.btnDeleteCalls.Name = "btnDeleteCalls"
+        Me.btnDeleteCalls.Size = New System.Drawing.Size(143, 34)
+        Me.btnDeleteCalls.TabIndex = 22
+        Me.btnDeleteCalls.Text = "Delete Call(s)"
+        Me.btnDeleteCalls.UseVisualStyleBackColor = True
+        '
+        'txtContentID
+        '
+        Me.txtContentID.Location = New System.Drawing.Point(19, 630)
+        Me.txtContentID.Name = "txtContentID"
+        Me.txtContentID.Size = New System.Drawing.Size(100, 26)
+        Me.txtContentID.TabIndex = 17
+        Me.txtContentID.Visible = False
+        '
+        'cmboPreset
+        '
+        Me.cmboPreset.FormattingEnabled = True
+        Me.cmboPreset.Items.AddRange(New Object() {"New", "Greatest Show Audio", "Harry Potter Video"})
+        Me.cmboPreset.Location = New System.Drawing.Point(19, 669)
+        Me.cmboPreset.Name = "cmboPreset"
+        Me.cmboPreset.Size = New System.Drawing.Size(261, 28)
+        Me.cmboPreset.TabIndex = 16
+        '
         'btnSceneClear
         '
-        Me.btnSceneClear.Location = New System.Drawing.Point(911, 669)
+        Me.btnSceneClear.Location = New System.Drawing.Point(1314, 669)
         Me.btnSceneClear.Name = "btnSceneClear"
         Me.btnSceneClear.Size = New System.Drawing.Size(107, 40)
         Me.btnSceneClear.TabIndex = 15
@@ -522,67 +563,33 @@ Partial Class frmMain
         '
         'btnPlay
         '
-        Me.btnPlay.Location = New System.Drawing.Point(283, 669)
+        Me.btnPlay.Location = New System.Drawing.Point(900, 669)
         Me.btnPlay.Name = "btnPlay"
-        Me.btnPlay.Size = New System.Drawing.Size(107, 40)
+        Me.btnPlay.Size = New System.Drawing.Size(183, 40)
         Me.btnPlay.TabIndex = 13
         Me.btnPlay.Text = "PLAY"
         Me.btnPlay.UseVisualStyleBackColor = True
         '
         'btnMark
         '
-        Me.btnMark.Location = New System.Drawing.Point(152, 669)
+        Me.btnMark.Location = New System.Drawing.Point(502, 669)
         Me.btnMark.Name = "btnMark"
-        Me.btnMark.Size = New System.Drawing.Size(107, 40)
+        Me.btnMark.Size = New System.Drawing.Size(196, 40)
         Me.btnMark.TabIndex = 12
         Me.btnMark.Text = "MARK"
         Me.btnMark.UseVisualStyleBackColor = True
         '
-        'DataGridView1
+        'dgSliceCalls
         '
-        Me.DataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
-        Me.DataGridView1.Columns.AddRange(New System.Windows.Forms.DataGridViewColumn() {Me.id, Me.position, Me.sceneName, Me.editScene})
-        Me.DataGridView1.Location = New System.Drawing.Point(911, 17)
-        Me.DataGridView1.Name = "DataGridView1"
-        Me.DataGridView1.RowTemplate.Height = 28
-        Me.DataGridView1.Size = New System.Drawing.Size(510, 582)
-        Me.DataGridView1.TabIndex = 11
-        '
-        'id
-        '
-        Me.id.HeaderText = "ID"
-        Me.id.Name = "id"
-        Me.id.ReadOnly = True
-        Me.id.Width = 20
-        '
-        'position
-        '
-        Me.position.HeaderText = "Position"
-        Me.position.Name = "position"
-        Me.position.ReadOnly = True
-        Me.position.Width = 60
-        '
-        'sceneName
-        '
-        Me.sceneName.HeaderText = "Scene Name"
-        Me.sceneName.Name = "sceneName"
-        Me.sceneName.Width = 120
-        '
-        'editScene
-        '
-        Me.editScene.HeaderText = "Action"
-        Me.editScene.Name = "editScene"
-        Me.editScene.ReadOnly = True
-        Me.editScene.Width = 60
-        '
-        'AxWindowsMediaPlayer1
-        '
-        Me.AxWindowsMediaPlayer1.Enabled = True
-        Me.AxWindowsMediaPlayer1.Location = New System.Drawing.Point(19, 17)
-        Me.AxWindowsMediaPlayer1.Name = "AxWindowsMediaPlayer1"
-        Me.AxWindowsMediaPlayer1.OcxState = CType(resources.GetObject("AxWindowsMediaPlayer1.OcxState"), System.Windows.Forms.AxHost.State)
-        Me.AxWindowsMediaPlayer1.Size = New System.Drawing.Size(540, 408)
-        Me.AxWindowsMediaPlayer1.TabIndex = 7
+        Me.dgSliceCalls.AllowUserToAddRows = False
+        Me.dgSliceCalls.AllowUserToDeleteRows = False
+        Me.dgSliceCalls.AllowUserToResizeRows = False
+        Me.dgSliceCalls.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
+        Me.dgSliceCalls.Location = New System.Drawing.Point(900, 75)
+        Me.dgSliceCalls.Name = "dgSliceCalls"
+        Me.dgSliceCalls.RowTemplate.Height = 28
+        Me.dgSliceCalls.Size = New System.Drawing.Size(757, 569)
+        Me.dgSliceCalls.TabIndex = 11
         '
         'TabPage3
         '
@@ -1178,14 +1185,14 @@ Partial Class frmMain
         Me.dgChannels.AllowUserToDeleteRows = False
         Me.dgChannels.AllowUserToResizeColumns = False
         Me.dgChannels.AllowUserToResizeRows = False
-        DataGridViewCellStyle16.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle16.BackColor = System.Drawing.SystemColors.Control
-        DataGridViewCellStyle16.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        DataGridViewCellStyle16.ForeColor = System.Drawing.SystemColors.WindowText
-        DataGridViewCellStyle16.SelectionBackColor = System.Drawing.SystemColors.Highlight
-        DataGridViewCellStyle16.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle16.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
-        Me.dgChannels.ColumnHeadersDefaultCellStyle = DataGridViewCellStyle16
+        DataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Control
+        DataGridViewCellStyle1.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        DataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.WindowText
+        DataGridViewCellStyle1.SelectionBackColor = System.Drawing.SystemColors.Highlight
+        DataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.dgChannels.ColumnHeadersDefaultCellStyle = DataGridViewCellStyle1
         Me.dgChannels.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgChannels.Location = New System.Drawing.Point(941, 58)
         Me.dgChannels.Name = "dgChannels"
@@ -1199,14 +1206,14 @@ Partial Class frmMain
         Me.dgFixtures.AllowUserToDeleteRows = False
         Me.dgFixtures.AllowUserToResizeColumns = False
         Me.dgFixtures.AllowUserToResizeRows = False
-        DataGridViewCellStyle17.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle17.BackColor = System.Drawing.SystemColors.Control
-        DataGridViewCellStyle17.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        DataGridViewCellStyle17.ForeColor = System.Drawing.SystemColors.WindowText
-        DataGridViewCellStyle17.SelectionBackColor = System.Drawing.SystemColors.Highlight
-        DataGridViewCellStyle17.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle17.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
-        Me.dgFixtures.ColumnHeadersDefaultCellStyle = DataGridViewCellStyle17
+        DataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Control
+        DataGridViewCellStyle2.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        DataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.WindowText
+        DataGridViewCellStyle2.SelectionBackColor = System.Drawing.SystemColors.Highlight
+        DataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.dgFixtures.ColumnHeadersDefaultCellStyle = DataGridViewCellStyle2
         Me.dgFixtures.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgFixtures.Location = New System.Drawing.Point(18, 58)
         Me.dgFixtures.Name = "dgFixtures"
@@ -1216,6 +1223,10 @@ Partial Class frmMain
         '
         'TabPage5
         '
+        Me.TabPage5.Controls.Add(Me.txtChannelCount)
+        Me.TabPage5.Controls.Add(Me.btnBlackoutTgl)
+        Me.TabPage5.Controls.Add(Me.btnAllDevicesOff)
+        Me.TabPage5.Controls.Add(Me.btnDeviceOff)
         Me.TabPage5.Controls.Add(Me.Panel3)
         Me.TabPage5.Controls.Add(Me.Panel2)
         Me.TabPage5.Controls.Add(Me.txtLayoutName)
@@ -1232,6 +1243,42 @@ Partial Class frmMain
         Me.TabPage5.TabIndex = 4
         Me.TabPage5.Text = "Board"
         Me.TabPage5.UseVisualStyleBackColor = True
+        '
+        'txtChannelCount
+        '
+        Me.txtChannelCount.BackColor = System.Drawing.SystemColors.InactiveBorder
+        Me.txtChannelCount.Location = New System.Drawing.Point(1546, 41)
+        Me.txtChannelCount.Name = "txtChannelCount"
+        Me.txtChannelCount.Size = New System.Drawing.Size(61, 26)
+        Me.txtChannelCount.TabIndex = 88
+        Me.txtChannelCount.Visible = False
+        '
+        'btnBlackoutTgl
+        '
+        Me.btnBlackoutTgl.Location = New System.Drawing.Point(1519, 276)
+        Me.btnBlackoutTgl.Name = "btnBlackoutTgl"
+        Me.btnBlackoutTgl.Size = New System.Drawing.Size(129, 70)
+        Me.btnBlackoutTgl.TabIndex = 87
+        Me.btnBlackoutTgl.Text = "Blackout Toggle"
+        Me.btnBlackoutTgl.UseVisualStyleBackColor = True
+        '
+        'btnAllDevicesOff
+        '
+        Me.btnAllDevicesOff.Location = New System.Drawing.Point(1519, 182)
+        Me.btnAllDevicesOff.Name = "btnAllDevicesOff"
+        Me.btnAllDevicesOff.Size = New System.Drawing.Size(129, 69)
+        Me.btnAllDevicesOff.TabIndex = 86
+        Me.btnAllDevicesOff.Text = "All Devices Off"
+        Me.btnAllDevicesOff.UseVisualStyleBackColor = True
+        '
+        'btnDeviceOff
+        '
+        Me.btnDeviceOff.Location = New System.Drawing.Point(1519, 89)
+        Me.btnDeviceOff.Name = "btnDeviceOff"
+        Me.btnDeviceOff.Size = New System.Drawing.Size(129, 69)
+        Me.btnDeviceOff.TabIndex = 85
+        Me.btnDeviceOff.Text = "Selected Device Off"
+        Me.btnDeviceOff.UseVisualStyleBackColor = True
         '
         'Panel3
         '
@@ -2079,7 +2126,6 @@ Partial Class frmMain
         Me.Panel2.Controls.Add(Me.txtSliceGroups)
         Me.Panel2.Controls.Add(Me.btnSave)
         Me.Panel2.Controls.Add(Me.btnRunSlice)
-        Me.Panel2.Controls.Add(Me.btnBlackout)
         Me.Panel2.Controls.Add(Me.btnLoadNextSlice)
         Me.Panel2.Controls.Add(Me.Label37)
         Me.Panel2.Controls.Add(Me.cmboSliceFade)
@@ -2126,25 +2172,16 @@ Partial Class frmMain
         '
         'btnRunSlice
         '
-        Me.btnRunSlice.Location = New System.Drawing.Point(1125, 85)
+        Me.btnRunSlice.Location = New System.Drawing.Point(950, 85)
         Me.btnRunSlice.Name = "btnRunSlice"
         Me.btnRunSlice.Size = New System.Drawing.Size(145, 38)
         Me.btnRunSlice.TabIndex = 12
         Me.btnRunSlice.Text = "Run current slice"
         Me.btnRunSlice.UseVisualStyleBackColor = True
         '
-        'btnBlackout
-        '
-        Me.btnBlackout.Location = New System.Drawing.Point(950, 85)
-        Me.btnBlackout.Name = "btnBlackout"
-        Me.btnBlackout.Size = New System.Drawing.Size(145, 38)
-        Me.btnBlackout.TabIndex = 11
-        Me.btnBlackout.Text = "Blackout"
-        Me.btnBlackout.UseVisualStyleBackColor = True
-        '
         'btnLoadNextSlice
         '
-        Me.btnLoadNextSlice.Location = New System.Drawing.Point(1302, 31)
+        Me.btnLoadNextSlice.Location = New System.Drawing.Point(1113, 84)
         Me.btnLoadNextSlice.Name = "btnLoadNextSlice"
         Me.btnLoadNextSlice.Size = New System.Drawing.Size(145, 38)
         Me.btnLoadNextSlice.TabIndex = 10
@@ -2296,7 +2333,6 @@ Partial Class frmMain
         '
         Me.cmboDevice.Font = New System.Drawing.Font("Microsoft Sans Serif", 10.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
         Me.cmboDevice.FormattingEnabled = True
-        Me.cmboDevice.Items.AddRange(New Object() {"Laser 1", "Laser 2"})
         Me.cmboDevice.Location = New System.Drawing.Point(22, 40)
         Me.cmboDevice.Name = "cmboDevice"
         Me.cmboDevice.Size = New System.Drawing.Size(396, 33)
@@ -2340,14 +2376,14 @@ Partial Class frmMain
         Me.dgScenes.AllowUserToDeleteRows = False
         Me.dgScenes.AllowUserToResizeColumns = False
         Me.dgScenes.AllowUserToResizeRows = False
-        DataGridViewCellStyle18.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle18.BackColor = System.Drawing.SystemColors.Control
-        DataGridViewCellStyle18.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        DataGridViewCellStyle18.ForeColor = System.Drawing.SystemColors.WindowText
-        DataGridViewCellStyle18.SelectionBackColor = System.Drawing.SystemColors.Highlight
-        DataGridViewCellStyle18.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle18.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
-        Me.dgScenes.ColumnHeadersDefaultCellStyle = DataGridViewCellStyle18
+        DataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Control
+        DataGridViewCellStyle3.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        DataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.WindowText
+        DataGridViewCellStyle3.SelectionBackColor = System.Drawing.SystemColors.Highlight
+        DataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.dgScenes.ColumnHeadersDefaultCellStyle = DataGridViewCellStyle3
         Me.dgScenes.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgScenes.Location = New System.Drawing.Point(18, 58)
         Me.dgScenes.Name = "dgScenes"
@@ -2425,14 +2461,14 @@ Partial Class frmMain
         Me.dgshowlayouts.AllowUserToDeleteRows = False
         Me.dgshowlayouts.AllowUserToResizeColumns = False
         Me.dgshowlayouts.AllowUserToResizeRows = False
-        DataGridViewCellStyle19.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle19.BackColor = System.Drawing.SystemColors.Control
-        DataGridViewCellStyle19.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        DataGridViewCellStyle19.ForeColor = System.Drawing.SystemColors.WindowText
-        DataGridViewCellStyle19.SelectionBackColor = System.Drawing.SystemColors.Highlight
-        DataGridViewCellStyle19.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle19.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
-        Me.dgshowlayouts.ColumnHeadersDefaultCellStyle = DataGridViewCellStyle19
+        DataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Control
+        DataGridViewCellStyle4.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        DataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.WindowText
+        DataGridViewCellStyle4.SelectionBackColor = System.Drawing.SystemColors.Highlight
+        DataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.dgshowlayouts.ColumnHeadersDefaultCellStyle = DataGridViewCellStyle4
         Me.dgshowlayouts.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgshowlayouts.Location = New System.Drawing.Point(696, 63)
         Me.dgshowlayouts.Name = "dgshowlayouts"
@@ -2457,14 +2493,14 @@ Partial Class frmMain
         Me.dgavailabledevices.AllowUserToDeleteRows = False
         Me.dgavailabledevices.AllowUserToResizeColumns = False
         Me.dgavailabledevices.AllowUserToResizeRows = False
-        DataGridViewCellStyle20.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
-        DataGridViewCellStyle20.BackColor = System.Drawing.SystemColors.Control
-        DataGridViewCellStyle20.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
-        DataGridViewCellStyle20.ForeColor = System.Drawing.SystemColors.WindowText
-        DataGridViewCellStyle20.SelectionBackColor = System.Drawing.SystemColors.Highlight
-        DataGridViewCellStyle20.SelectionForeColor = System.Drawing.SystemColors.HighlightText
-        DataGridViewCellStyle20.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
-        Me.dgavailabledevices.ColumnHeadersDefaultCellStyle = DataGridViewCellStyle20
+        DataGridViewCellStyle5.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft
+        DataGridViewCellStyle5.BackColor = System.Drawing.SystemColors.Control
+        DataGridViewCellStyle5.Font = New System.Drawing.Font("Microsoft Sans Serif", 8.0!, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, CType(0, Byte))
+        DataGridViewCellStyle5.ForeColor = System.Drawing.SystemColors.WindowText
+        DataGridViewCellStyle5.SelectionBackColor = System.Drawing.SystemColors.Highlight
+        DataGridViewCellStyle5.SelectionForeColor = System.Drawing.SystemColors.HighlightText
+        DataGridViewCellStyle5.WrapMode = System.Windows.Forms.DataGridViewTriState.[True]
+        Me.dgavailabledevices.ColumnHeadersDefaultCellStyle = DataGridViewCellStyle5
         Me.dgavailabledevices.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize
         Me.dgavailabledevices.Location = New System.Drawing.Point(29, 63)
         Me.dgavailabledevices.Name = "dgavailabledevices"
@@ -2513,6 +2549,15 @@ Partial Class frmMain
         Me.Label6.TabIndex = 15
         Me.Label6.Text = "Database Status"
         '
+        'AxWindowsMediaPlayer1
+        '
+        Me.AxWindowsMediaPlayer1.Enabled = True
+        Me.AxWindowsMediaPlayer1.Location = New System.Drawing.Point(19, 17)
+        Me.AxWindowsMediaPlayer1.Name = "AxWindowsMediaPlayer1"
+        Me.AxWindowsMediaPlayer1.OcxState = CType(resources.GetObject("AxWindowsMediaPlayer1.OcxState"), System.Windows.Forms.AxHost.State)
+        Me.AxWindowsMediaPlayer1.Size = New System.Drawing.Size(540, 408)
+        Me.AxWindowsMediaPlayer1.TabIndex = 7
+        '
         'frmMain
         '
         Me.AutoScaleDimensions = New System.Drawing.SizeF(9.0!, 20.0!)
@@ -2533,8 +2578,8 @@ Partial Class frmMain
         Me.Panel1.ResumeLayout(False)
         Me.Panel1.PerformLayout()
         Me.TabPage2.ResumeLayout(False)
-        CType(Me.DataGridView1, System.ComponentModel.ISupportInitialize).EndInit()
-        CType(Me.AxWindowsMediaPlayer1, System.ComponentModel.ISupportInitialize).EndInit()
+        Me.TabPage2.PerformLayout()
+        CType(Me.dgSliceCalls, System.ComponentModel.ISupportInitialize).EndInit()
         Me.TabPage3.ResumeLayout(False)
         Me.TabPage4.ResumeLayout(False)
         Me.TabPage4.PerformLayout()
@@ -2571,6 +2616,7 @@ Partial Class frmMain
         Me.TabPage7.PerformLayout()
         CType(Me.dgshowlayouts, System.ComponentModel.ISupportInitialize).EndInit()
         CType(Me.dgavailabledevices, System.ComponentModel.ISupportInitialize).EndInit()
+        CType(Me.AxWindowsMediaPlayer1, System.ComponentModel.ISupportInitialize).EndInit()
         Me.ResumeLayout(False)
         Me.PerformLayout()
 
@@ -2645,12 +2691,8 @@ Partial Class frmMain
     Friend WithEvents Label2 As Label
     Friend WithEvents btnAll48On As Button
     Friend WithEvents btnAll48Off As Button
-    Friend WithEvents DataGridView1 As DataGridView
+    Friend WithEvents dgSliceCalls As DataGridView
     Friend WithEvents btnMark As Button
-    Friend WithEvents id As DataGridViewTextBoxColumn
-    Friend WithEvents position As DataGridViewTextBoxColumn
-    Friend WithEvents sceneName As DataGridViewTextBoxColumn
-    Friend WithEvents editScene As DataGridViewTextBoxColumn
     Friend WithEvents wmProgressTimer As Timer
     Friend WithEvents btnPlay As Button
     Friend WithEvents btnSceneClear As Button
@@ -2705,7 +2747,6 @@ Partial Class frmMain
     Friend WithEvents txtSliceGroups As TextBox
     Friend WithEvents btnSave As Button
     Friend WithEvents btnRunSlice As Button
-    Friend WithEvents btnBlackout As Button
     Friend WithEvents btnLoadNextSlice As Button
     Friend WithEvents Label37 As Label
     Friend WithEvents cmboSliceFade As ComboBox
@@ -2790,4 +2831,12 @@ Partial Class frmMain
     Friend WithEvents ch3 As TrackBar
     Friend WithEvents ch2 As TrackBar
     Friend WithEvents ch1 As TrackBar
+    Friend WithEvents btnBlackoutTgl As Button
+    Friend WithEvents btnAllDevicesOff As Button
+    Friend WithEvents btnDeviceOff As Button
+    Friend WithEvents txtChannelCount As TextBox
+    Friend WithEvents cmboPreset As ComboBox
+    Friend WithEvents txtContentID As TextBox
+    Friend WithEvents btnDeleteCalls As Button
+    Friend WithEvents txtCurrentPosition As TextBox
 End Class

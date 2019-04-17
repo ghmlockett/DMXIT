@@ -3,6 +3,7 @@ Imports System.Timers
 Imports System.Runtime.InteropServices
 Imports System.Drawing
 Imports System.IO
+Imports System.Configuration
 Imports AxWMPLib
 Imports MongoDB.Bson
 Imports MongoDB.Driver
@@ -96,6 +97,9 @@ Public Class frmMain
             Label6.Text = ""
             Label6.ForeColor = Color.Green
         End If
+
+        ' load default application settings
+        txtLayoutName.Text = My.Settings.defaultLayout
 
         'Dim _fixture As New datamodel.DmxFixture
         '_fixture.name = "test name"
@@ -302,11 +306,29 @@ Public Class frmMain
         ' End Using
     End Sub
 
-    Private Sub btnLoad_Click(sender As Object, e As EventArgs) Handles btnLoad.Click
-        If OpenFileDialog1.ShowDialog = DialogResult.OK Then
-            AxWindowsMediaPlayer1.URL = OpenFileDialog1.FileName
-            AxWindowsMediaPlayer1.settings.setMode("loop", True)
-        End If
+    Private Async Sub btnLoad_Click(sender As Object, e As EventArgs) Handles btnLoad.Click
+
+        Select Case cmboPreset.Text
+            Case "New"
+                If OpenFileDialog1.ShowDialog = DialogResult.OK Then
+                    AxWindowsMediaPlayer1.URL = OpenFileDialog1.FileName
+
+                End If
+            Case "Greatest Show Audio"
+                AxWindowsMediaPlayer1.URL = "c:\democontent\greatestshowdemo.mp3"
+                txtContentID.Text = "0"
+
+            Case "Harry Potter Video"
+                AxWindowsMediaPlayer1.URL = "c:\democontent\harrypotter.mp4"
+                txtContentID.Text = "1"
+        End Select
+
+        AxWindowsMediaPlayer1.settings.setMode("loop", False)
+        AxWindowsMediaPlayer1.Ctlcontrols.stop()
+
+        Await populateDG1(txtContentID.Text)
+
+
     End Sub
 
     Private Sub btnStart_Click(sender As Object, e As EventArgs)
@@ -1071,12 +1093,36 @@ Public Class frmMain
         setBtnFlag(True)
     End Sub
 
-    Private Sub btnMark_Click(sender As Object, e As EventArgs) Handles btnMark.Click
+    Private Async Sub btnMark_Click(sender As Object, e As EventArgs) Handles btnMark.Click
         Dim currentPosition As Double = Math.Round(AxWindowsMediaPlayer1.Ctlcontrols.currentPosition, 1)
+        Dim r As String
+        Dim s As Integer
+        Dim t As DataTable
 
-        DataGridView1.Rows.Add(New String() {DataGridView1.NewRowIndex, currentPosition, "", "EDIT"})
+        'r = Await cls.DoesRecordExist("scenes", "name", "NEW")
+
+        'If r = 0 Then
+        ' create new record
+        s = Await cls.AddNewSliceCall("NEW", currentPosition, txtContentID.Text)
+        'Else
+        'Using New Centered_MessageBox(Me)
+        'MessageBox.Show("A NEW record already exists. Use this first")
+        'End Using
+        'End If
+
+        Await populateDG1(txtContentID.Text)
+
+        'dgSliceCalls.Rows.Add(New String() {dgSliceCalls.NewRowIndex, currentPosition, "", "EDIT"})
     End Sub
 
+    Private Sub dgslicecalls_Load(sender As System.Object, e As System.EventArgs) Handles MyBase.Load
+
+        Try
+            SetupDgSliceCalls()
+        Catch ex As Exception
+            Console.WriteLine(ex.Message)
+        End Try
+    End Sub
 
     Private Sub dgfixtures_Load(sender As System.Object, e As System.EventArgs) Handles MyBase.Load
 
@@ -1223,6 +1269,66 @@ Public Class frmMain
 
         dgshowlayouts.Columns.AddRange({c1, c2, c3, c4})
         dgshowlayouts.ColumnHeadersVisible = True
+    End Sub
+
+    Public Async Sub SetupDgSliceCalls()
+        'fill dataTableData with database data
+        Dim cls As New dataclass
+        cls.InitiateDb()
+
+        Dim t As DataTable
+
+        Dim c1 As New DataGridViewTextBoxColumn
+        With c1
+            .DataPropertyName = "_id"
+            .HeaderText = "Object ID"
+            .Width = 20
+            .MinimumWidth = 20
+            .Visible = False
+        End With
+
+        Dim c2 As New DataGridViewTextBoxColumn
+        With c2
+            .DataPropertyName = "comment"
+            .HeaderText = "Comment"
+            .Width = 200
+            .MinimumWidth = 200
+        End With
+
+        Dim c3 As New DataGridViewTextBoxColumn
+        With c3
+            .DataPropertyName = "position"
+            .HeaderText = "Position"
+            .Width = 60
+            .MinimumWidth = 60
+        End With
+
+        Dim c4 As New DataGridViewComboBoxColumn
+        t = Await cls.GetSlices()
+        With c4
+            .DataSource = t
+            .ValueMember = "_id"
+            .DisplayMember = "name"
+            .DataPropertyName = "slicename"
+            .HeaderText = "Slice Name"
+            .Width = 200
+            .MinimumWidth = 200
+            .FlatStyle = FlatStyle.Flat
+            .DisplayStyleForCurrentCellOnly = True
+        End With
+
+        Dim c5 As New DataGridViewTextBoxColumn
+        With c5
+            .DataPropertyName = "contentid"
+            .HeaderText = "Content ID"
+            .Width = 60
+            .MinimumWidth = 60
+            .Visible = False
+        End With
+
+        dgSliceCalls.Columns.AddRange({c1, c2, c3, c4, c5})
+        dgSliceCalls.ColumnHeadersVisible = True
+
     End Sub
 
     Public Sub SetupDgfixtures()
@@ -1379,16 +1485,50 @@ Public Class frmMain
 
     End Sub
 
-    Private Sub wmProgressTimer_Tick(sender As Object, e As EventArgs) Handles wmProgressTimer.Tick
-        For Each item As Double In posArray
-            If Math.Round(AxWindowsMediaPlayer1.Ctlcontrols.currentPosition, 1) = item And item <> 0 Then
+    Private Async Function autoRunSlice(keyvalue As String) As Task
+        Dim t As DataTable
 
-                DataGridView1.Rows(posArrayCount).DefaultCellStyle.BackColor = Color.LightGreen
-                ' clear prior row highlight
-                If posArrayCount >= 1 And posArrayCount < DataGridView1.Rows.Count Then
-                    DataGridView1.Rows(posArrayCount - 1).DefaultCellStyle.BackColor = Color.White
+        t = Await cls.GetSlice("_id", keyvalue)
+        Dim name As String = t.Rows(0)("name")
+        Dim dmxstring As String = t.Rows(0)("dmxstring")
+        Dim nextslice As String = t.Rows(0)("nextslice")
+
+        ' decode dmxstring back to dmx byte array
+        dmxdata = System.Text.Encoding.Default.GetBytes(dmxstring)
+
+        ' send dmx
+        MainClass.sendDMXdata(dmxdata, 0)
+
+    End Function
+
+
+    Private Async Sub wmProgressTimer_Tick(sender As Object, e As EventArgs) Handles wmProgressTimer.Tick
+        Dim currentposition As Double = AxWindowsMediaPlayer1.Ctlcontrols.currentPosition
+        Dim keyvalue As String
+
+        ' update visual 
+        txtCurrentPosition.Text = currentposition
+
+        ' calculate if match
+        For Each item As Double In posArray
+            If Math.Round(currentposition, 1) = item And item <> 0 Then
+
+                ' match found
+                dgSliceCalls.Rows(posArrayCount).DefaultCellStyle.BackColor = Color.LightGreen
+
+                If IsDBNull(dgSliceCalls.Rows(posArrayCount).Cells(4).Value) Then
+                    ' no slice defined, move on
+                Else
+                    ' retrieve slice and run
+                    keyvalue = dgSliceCalls.Rows(posArrayCount).Cells(4).Value
+                    Await autoRunSlice(keyvalue)
                 End If
-                If posArrayCount < DataGridView1.Rows.Count Then
+
+                ' clear prior row highlight
+                If posArrayCount >= 1 And posArrayCount < dgSliceCalls.Rows.Count Then
+                    dgSliceCalls.Rows(posArrayCount - 1).DefaultCellStyle.BackColor = Color.White
+                End If
+                If posArrayCount < dgSliceCalls.Rows.Count Then
                     posArrayCount = posArrayCount + 1
                 Else
                     posArrayCount = 0
@@ -1401,17 +1541,25 @@ Public Class frmMain
 
     Private Sub btnPlay_Click(sender As Object, e As EventArgs) Handles btnPlay.Click
         Dim row As DataGridViewRow
-        For Each row In DataGridView1.Rows
-            posArray.Add(row.Cells(1).Value)
+        For Each row In dgSliceCalls.Rows
+            posArray.Add(row.Cells(2).Value)
         Next
 
+        AxWindowsMediaPlayer1.Ctlcontrols.stop()
+        AxWindowsMediaPlayer1.Ctlcontrols.currentPosition = 0
+
+        txtCurrentPosition.Text = ""
+        wmProgressTimer.Stop()
         posArrayCount = 0
+
         wmProgressTimer.Start()
         AxWindowsMediaPlayer1.Ctlcontrols.play()
     End Sub
 
     Private Sub btnSceneClear_Click(sender As Object, e As EventArgs) Handles btnSceneClear.Click
-        DataGridView1.Rows.Clear()
+        dgSliceCalls.DataSource = Nothing
+        dgSliceCalls.Columns.Clear()
+
     End Sub
 
 
@@ -1493,83 +1641,7 @@ Public Class frmMain
 
     End Sub
 
-    Async Sub TabControl1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles TabControl1.SelectedIndexChanged
-        Dim d1, d2 As New DataTable
 
-        'fixtures tab
-        If TabControl1.SelectedTab Is TabPage4 Then
-            'load dmx fixture library
-            d1 = Await cls.GetDevices()
-            dgFixtures.DataSource = d1
-            dgFixtures.Columns("_id").Visible = False
-            If dgFixtures.RowCount > 0 Then
-                dgFixtures.Rows(0).Selected = True
-                Dim s As String = dgFixtures.Item(0, 0).Value
-                Await populateDG2(s)
-            End If
-        End If
-
-        ' board/mixer tab 
-        If TabControl1.SelectedTab Is TabPage5 Then
-            'load scene library
-            d1 = Await cls.GetScenes()
-            dgScenes.DataSource = d1
-            cmboScenes.ValueMember = "name"
-            cmboScenes.DisplayMember = "name"
-
-            ' load fixtures
-            If txtLayoutName.Text = "" Then
-                ' error validation
-            Else
-                d2 = Await cls.GetLayoutConfiguration("name", txtLayoutName.Text)
-                cmboDevice.DataSource = d2
-                cmboDevice.ValueMember = "devicealias"
-                cmboDevice.DisplayMember = "deviceref"
-            End If
-
-            ' populate slice panel controls
-            Dim t As DataTable
-            t = cls.LoadSliceCombos("duration")
-            cmboSliceDuration.DataSource = t
-            cmboSliceDuration.ValueMember = "item"
-            cmboSliceDuration.DisplayMember = "alias"
-
-            t = cls.LoadSliceCombos("fade")
-            cmboSliceFade.DataSource = t
-            cmboSliceFade.ValueMember = "item"
-            cmboSliceFade.DisplayMember = "alias"
-
-
-        End If
-
-        ' scenes tab
-        If TabControl1.SelectedTab Is TabPage6 Then
-            'load scene library
-            d1 = Await cls.GetScenes()
-            dgScenes.DataSource = d1
-
-            cmboScenes.DataSource = d1
-            cmboScenes.ValueMember = "name"
-            cmboScenes.DisplayMember = "name"
-        End If
-
-        ' layouts tab
-        If TabControl1.SelectedTab Is TabPage7 Then
-
-            'load layout combo
-            Await LoadLocation()
-
-            'load dmx fixture library
-            d1 = Await cls.GetDevices()
-            dgavailabledevices.DataSource = d1
-            dgavailabledevices.Columns("_id").Visible = False
-            If dgavailabledevices.RowCount > 0 Then
-                dgavailabledevices.Rows(0).Selected = True
-            End If
-            ' populate drop down layout combo control
-
-        End If
-    End Sub
     Public Async Function LoadLocation() As Task
         Dim d1 As New DataTable
 
@@ -1590,6 +1662,20 @@ Public Class frmMain
 
         dgChannels.DataSource = l
         dgChannels.Refresh()
+
+    End Function
+
+    Private Async Function populateDG1(contentid As String) As Task
+        Dim t As DataTable
+
+        dgSliceCalls.DataSource = Nothing
+        dgSliceCalls.Columns.Clear()
+        SetupDgSliceCalls()
+
+
+        t = Await cls.GetSliceCalls(contentid)
+
+        dgSliceCalls.DataSource = t
 
     End Function
 
@@ -1660,7 +1746,14 @@ Public Class frmMain
         If txtCh1.Text > 255 Then txtCh1.Text = 255
         If ch1.Value < 256 And txtCh1.Text < 256 Then
             ch1.Value = txtCh1.Text
-            dmxdata(1 + device) = CInt(txtCh1.Text)
+
+            ' get device id
+            If cmboDevice.Text = "" Then Exit Sub
+            Dim r As DataRowView = cmboDevice.SelectedItem
+            Dim s As String = r(2)
+
+            ' get and send dmx
+            dmxdata(s + 0) = CInt(txtCh1.Text)
             MainClass.sendDMXdata(dmxdata)
         End If
     End Sub
@@ -1670,7 +1763,14 @@ Public Class frmMain
         If txtCh2.Text > 255 Then txtCh2.Text = 255
         If ch2.Value < 256 And txtCh2.Text < 256 Then
             ch2.Value = txtCh2.Text
-            dmxdata(2 + device) = CInt(txtCh2.Text)
+
+            ' get device id
+            If cmboDevice.Text = "" Then Exit Sub
+            Dim r As DataRowView = cmboDevice.SelectedItem
+            Dim s As String = r(2)
+
+            ' get and send dmx
+            dmxdata(s + 1) = CInt(txtCh2.Text)
             MainClass.sendDMXdata(dmxdata)
         End If
     End Sub
@@ -1680,7 +1780,14 @@ Public Class frmMain
         If txtCh3.Text > 255 Then txtCh3.Text = 255
         If ch3.Value < 256 And txtCh3.Text < 256 Then
             ch3.Value = txtCh3.Text
-            dmxdata(3 + device) = CInt(txtCh3.Text)
+
+            ' get device id
+            If cmboDevice.Text = "" Then Exit Sub
+            Dim r As DataRowView = cmboDevice.SelectedItem
+            Dim s As String = r(2)
+
+            ' get and send dmx
+            dmxdata(s + 2) = CInt(txtCh3.Text)
             MainClass.sendDMXdata(dmxdata)
         End If
     End Sub
@@ -1690,7 +1797,14 @@ Public Class frmMain
         If txtCh4.Text > 255 Then txtCh4.Text = 255
         If ch4.Value < 256 And txtCh4.Text < 256 Then
             ch4.Value = txtCh4.Text
-            dmxdata(4 + device) = CInt(txtCh4.Text)
+
+            ' get device id
+            If cmboDevice.Text = "" Then Exit Sub
+            Dim r As DataRowView = cmboDevice.SelectedItem
+            Dim s As String = r(2)
+
+            ' get and send dmx
+            dmxdata(s + 3) = CInt(txtCh4.Text)
             MainClass.sendDMXdata(dmxdata)
         End If
     End Sub
@@ -1700,7 +1814,14 @@ Public Class frmMain
         If txtCh5.Text > 255 Then txtCh5.Text = 255
         If ch5.Value < 256 And txtCh5.Text < 256 Then
             ch5.Value = txtCh5.Text
-            dmxdata(5 + device) = CInt(txtCh5.Text)
+
+            ' get device id
+            If cmboDevice.Text = "" Then Exit Sub
+            Dim r As DataRowView = cmboDevice.SelectedItem
+            Dim s As String = r(2)
+
+            ' get and send dmx
+            dmxdata(s + 4) = CInt(txtCh5.Text)
             MainClass.sendDMXdata(dmxdata)
         End If
     End Sub
@@ -1710,7 +1831,14 @@ Public Class frmMain
         If txtCh6.Text > 255 Then txtCh6.Text = 255
         If ch6.Value < 256 And txtCh6.Text < 256 Then
             ch6.Value = txtCh6.Text
-            dmxdata(6 + device) = CInt(txtCh6.Text)
+
+            ' get device id
+            If cmboDevice.Text = "" Then Exit Sub
+            Dim r As DataRowView = cmboDevice.SelectedItem
+            Dim s As String = r(2)
+
+            ' get and send dmx
+            dmxdata(s + 5) = CInt(txtCh6.Text)
             MainClass.sendDMXdata(dmxdata)
         End If
     End Sub
@@ -1720,7 +1848,14 @@ Public Class frmMain
         If txtCh7.Text > 255 Then txtCh7.Text = 255
         If ch7.Value < 256 And txtCh7.Text < 256 Then
             ch7.Value = txtCh7.Text
-            dmxdata(7 + device) = CInt(txtCh7.Text)
+
+            ' get device id
+            If cmboDevice.Text = "" Then Exit Sub
+            Dim r As DataRowView = cmboDevice.SelectedItem
+            Dim s As String = r(2)
+
+            ' get and send dmx
+            dmxdata(s + 6) = CInt(txtCh7.Text)
             MainClass.sendDMXdata(dmxdata)
         End If
     End Sub
@@ -1730,7 +1865,14 @@ Public Class frmMain
         If txtCh8.Text > 255 Then txtCh8.Text = 255
         If ch8.Value < 256 And txtCh8.Text < 256 Then
             ch8.Value = txtCh8.Text
-            dmxdata(8 + device) = CInt(txtCh8.Text)
+
+            ' get device id
+            If cmboDevice.Text = "" Then Exit Sub
+            Dim r As DataRowView = cmboDevice.SelectedItem
+            Dim s As String = r(2)
+
+            ' get and send dmx
+            dmxdata(s + 7) = CInt(txtCh8.Text)
             MainClass.sendDMXdata(dmxdata)
         End If
     End Sub
@@ -1740,7 +1882,14 @@ Public Class frmMain
         If txtCh9.Text > 255 Then txtCh9.Text = 255
         If ch9.Value < 256 And txtCh9.Text < 256 Then
             ch9.Value = txtCh9.Text
-            dmxdata(9 + device) = CInt(txtCh9.Text)
+
+            ' get device id
+            If cmboDevice.Text = "" Then Exit Sub
+            Dim r As DataRowView = cmboDevice.SelectedItem
+            Dim s As String = r(2)
+
+            ' get and send dmx
+            dmxdata(s + 8) = CInt(txtCh9.Text)
             MainClass.sendDMXdata(dmxdata)
         End If
     End Sub
@@ -1750,7 +1899,14 @@ Public Class frmMain
         If txtCh10.Text > 255 Then txtCh10.Text = 255
         If ch10.Value < 256 And txtCh10.Text < 256 Then
             ch10.Value = txtCh10.Text
-            dmxdata(10 + device) = CInt(txtCh10.Text)
+
+            ' get device id
+            If cmboDevice.Text = "" Then Exit Sub
+            Dim r As DataRowView = cmboDevice.SelectedItem
+            Dim s As String = r(2)
+
+            ' get and send dmx
+            dmxdata(s + 9) = CInt(txtCh10.Text)
             MainClass.sendDMXdata(dmxdata)
         End If
     End Sub
@@ -1760,7 +1916,14 @@ Public Class frmMain
         If txtCh11.Text > 255 Then txtCh11.Text = 255
         If ch11.Value < 256 And txtCh11.Text < 256 Then
             ch11.Value = txtCh11.Text
-            dmxdata(11 + device) = CInt(txtCh11.Text)
+
+            ' get device id
+            If cmboDevice.Text = "" Then Exit Sub
+            Dim r As DataRowView = cmboDevice.SelectedItem
+            Dim s As String = r(2)
+
+            ' get and send dmx
+            dmxdata(s + 10) = CInt(txtCh11.Text)
             MainClass.sendDMXdata(dmxdata)
         End If
     End Sub
@@ -1770,7 +1933,14 @@ Public Class frmMain
         If txtCh12.Text > 255 Then txtCh12.Text = 255
         If ch12.Value < 256 And txtCh12.Text < 256 Then
             ch12.Value = txtCh12.Text
-            dmxdata(12 + device) = CInt(txtCh12.Text)
+
+            ' get device id
+            If cmboDevice.Text = "" Then Exit Sub
+            Dim r As DataRowView = cmboDevice.SelectedItem
+            Dim s As String = r(2)
+
+            ' get and send dmx
+            dmxdata(s + 11) = CInt(txtCh12.Text)
             MainClass.sendDMXdata(dmxdata)
         End If
     End Sub
@@ -1780,7 +1950,14 @@ Public Class frmMain
         If txtCh13.Text > 255 Then txtCh13.Text = 255
         If ch13.Value < 256 And txtCh13.Text < 256 Then
             ch13.Value = txtCh13.Text
-            dmxdata(13 + device) = CInt(txtCh13.Text)
+
+            ' get device id
+            If cmboDevice.Text = "" Then Exit Sub
+            Dim r As DataRowView = cmboDevice.SelectedItem
+            Dim s As String = r(2)
+
+            ' get and send dmx
+            dmxdata(s + 12) = CInt(txtCh13.Text)
             MainClass.sendDMXdata(dmxdata)
         End If
     End Sub
@@ -1790,7 +1967,14 @@ Public Class frmMain
         If txtCh14.Text > 255 Then txtCh14.Text = 255
         If ch14.Value < 256 And txtCh14.Text < 256 Then
             ch14.Value = txtCh14.Text
-            dmxdata(14 + device) = CInt(txtCh14.Text)
+
+            ' get device id
+            If cmboDevice.Text = "" Then Exit Sub
+            Dim r As DataRowView = cmboDevice.SelectedItem
+            Dim s As String = r(2)
+
+            ' get and send dmx
+            dmxdata(s + 13) = CInt(txtCh14.Text)
             MainClass.sendDMXdata(dmxdata)
         End If
     End Sub
@@ -1800,7 +1984,14 @@ Public Class frmMain
         If txtCh15.Text > 255 Then txtCh15.Text = 255
         If ch15.Value < 256 And txtCh15.Text < 256 Then
             ch15.Value = txtCh15.Text
-            dmxdata(15 + device) = CInt(txtCh15.Text)
+
+            ' get device id
+            If cmboDevice.Text = "" Then Exit Sub
+            Dim r As DataRowView = cmboDevice.SelectedItem
+            Dim s As String = r(2)
+
+            ' get and send dmx
+            dmxdata(s + 14) = CInt(txtCh15.Text)
             MainClass.sendDMXdata(dmxdata)
         End If
     End Sub
@@ -1810,7 +2001,14 @@ Public Class frmMain
         If txtCh16.Text > 255 Then txtCh16.Text = 255
         If ch16.Value < 256 And txtCh16.Text < 256 Then
             ch16.Value = txtCh16.Text
-            dmxdata(16 + device) = CInt(txtCh16.Text)
+
+            ' get device id
+            If cmboDevice.Text = "" Then Exit Sub
+            Dim r As DataRowView = cmboDevice.SelectedItem
+            Dim s As String = r(2)
+
+            ' get and send dmx
+            dmxdata(s + 15) = CInt(txtCh16.Text)
             MainClass.sendDMXdata(dmxdata)
         End If
     End Sub
@@ -1820,7 +2018,14 @@ Public Class frmMain
         If txtCh17.Text > 255 Then txtCh17.Text = 255
         If ch17.Value < 256 And txtCh17.Text < 256 Then
             ch17.Value = txtCh17.Text
-            dmxdata(17 + device) = CInt(txtCh17.Text)
+
+            ' get device id
+            If cmboDevice.Text = "" Then Exit Sub
+            Dim r As DataRowView = cmboDevice.SelectedItem
+            Dim s As String = r(2)
+
+            ' get and send dmx
+            dmxdata(s + 16) = CInt(txtCh17.Text)
             MainClass.sendDMXdata(dmxdata)
         End If
     End Sub
@@ -1830,7 +2035,14 @@ Public Class frmMain
         If txtCh18.Text > 255 Then txtCh18.Text = 255
         If ch18.Value < 256 And txtCh18.Text < 256 Then
             ch18.Value = txtCh18.Text
-            dmxdata(18 + device) = CInt(txtCh18.Text)
+
+            ' get device id
+            If cmboDevice.Text = "" Then Exit Sub
+            Dim r As DataRowView = cmboDevice.SelectedItem
+            Dim s As String = r(2)
+
+            ' get and send dmx
+            dmxdata(s + 17) = CInt(txtCh18.Text)
             MainClass.sendDMXdata(dmxdata)
         End If
     End Sub
@@ -1926,14 +2138,6 @@ Public Class frmMain
         txtCh18.Text = trkBar.Value
     End Sub
 
-    Private Sub txtCh1_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtCh1.KeyPress
-        If Asc(e.KeyChar) <> 8 Then
-            If Asc(e.KeyChar) < 48 Or Asc(e.KeyChar) > 53 Then
-                e.Handled = True
-            End If
-        End If
-    End Sub
-
     Private Sub txtCh1_MouseEnter(sender As Object, e As EventArgs)
         txtCh1.SelectAll()
     End Sub
@@ -1966,6 +2170,9 @@ Public Class frmMain
             'TabControl1.TabPages("TabPage5").Controls("lblch" & r(0)).Text = r(1)
             Panel3.Controls("lblch" & r(0)).Text = r(1)
         Next
+
+        ' store max channels of device
+        txtChannelCount.Text = t.Rows.Count - 1
 
         'Select Case fieldvalue
         '    Case "Laser"
@@ -2346,8 +2553,8 @@ Public Class frmMain
 
     End Sub
 
-    Private Sub dgChannels_DataError(ByVal sender As System.Object, ByVal e As System.Windows.Forms.DataGridViewDataErrorEventArgs) _
-Handles dgChannels.DataError
+    Private Sub dgChannels_DataError(ByVal sender As System.Object, ByVal e As System.Windows.Forms.DataGridViewDataErrorEventArgs) Handles dgChannels.DataError
+
 
         MessageBox.Show("Error:  " & e.Context.ToString())
         'e.Cancel = True
@@ -2421,42 +2628,6 @@ Handles dgChannels.DataError
         ' update record
         r = Await cls.UpdateConfigRecord(keyname, dgindex, fieldname, fieldvalue)
 
-        'Dim r As Integer
-        'Dim keyname As String
-        'Dim dgindex As Integer = e.RowIndex
-        'Dim field1 As String = ""
-        'Dim field2 As String = ""
-        'Dim field3 As String = ""
-        'Dim field4 As String = ""
-
-
-        '' validation
-        'If dgFixtures.SelectedRows.Count = 0 Then Exit Sub
-
-        '' null check
-        'If Not IsDBNull(dgChannels.Rows(e.RowIndex).Cells(0).Value) Then
-        '    field1 = dgChannels.Rows(e.RowIndex).Cells(0).Value
-        'End If
-        'If Not IsDBNull(dgChannels.Rows(e.RowIndex).Cells(1).Value) Then
-        '    field2 = dgChannels.Rows(e.RowIndex).Cells(1).Value
-        'End If
-        'If Not IsDBNull(dgChannels.Rows(e.RowIndex).Cells(2).Value) Then
-        '    field3 = dgChannels.Rows(e.RowIndex).Cells(2).Value
-        'End If
-        'If Not IsDBNull(dgChannels.Rows(e.RowIndex).Cells(3).Value) Then
-        '    field4 = dgChannels.Rows(e.RowIndex).Cells(3).Value
-        'End If
-
-        'keyname = dgFixtures.SelectedRows(0).Cells(0).Value
-
-        'Dim fieldarray(3) As String
-        'fieldarray(0) = field1
-        'fieldarray(1) = field2
-        'fieldarray(2) = field3
-        'fieldarray(3) = field4
-
-        'r = Await cls.UpdateConfigRecord(keyname, dgindex, fieldarray)
-
     End Sub
 
     Private Async Sub dgavailabledevices_CellContentClick(sender As Object, e As DataGridViewCellEventArgs) Handles dgavailabledevices.CellContentClick
@@ -2498,17 +2669,18 @@ Handles dgChannels.DataError
         frm.Show()
     End Sub
 
-    Private Async Sub cmboLayouts_SelectedValueChanged(sender As Object, e As EventArgs) Handles cmboLayouts.SelectedValueChanged
-        Dim d1 As DataTable
-        Dim l As Task
+    Private Sub cmboLayouts_SelectedValueChanged(sender As Object, e As EventArgs) Handles cmboLayouts.SelectedValueChanged
+        Dim t As Task
 
 
         'load dmx fixture library
         If cmboLayouts.Text <> "" Then
             Dim drv As DataRowView = cmboLayouts.SelectedItem
             Dim s As String = drv(1)
-            l = populateDG4(s)
+            t = populateDG4(s)
             txtLayoutName.Text = s
+            My.Settings.defaultLayout = s
+            My.Settings.Save()
         End If
 
 
@@ -2606,6 +2778,7 @@ Handles dgChannels.DataError
         Dim sliceid As String
         Dim duration As String
         Dim fade As String
+        Dim nextslice As String
         Dim r As String
 
         ' user validation
@@ -2619,12 +2792,14 @@ Handles dgChannels.DataError
         ' get values
         duration = cmboSliceDuration.SelectedValue
         fade = cmboSliceFade.Text
+        nextslice = cmboNextSlice.Text
 
         ' get slice name
         If cmboSliceSelect.Text <> "" Then
             ' update existing slice
-            slicename = cmboSliceSelect.SelectedItem
-            sliceid = cmboSliceSelect.SelectedValue
+            Dim drv As DataRowView = cmboSliceSelect.SelectedItem
+            slicename = drv(1)
+            sliceid = drv(0)
         Else
             ' save new slice
             slicename = txtSliceName.Text
@@ -2633,12 +2808,239 @@ Handles dgChannels.DataError
         r = Await cls.DoesRecordExist("slices", "name", slicename)
 
 
-        If r = "" Then
+        If r = "000000000000000000000000" Then
             ' create new record
-            r = Await cls.saveSlice(txtSliceName.Text, duration, fade, dmxdata)
+            r = Await cls.saveNewSlice(txtSliceName.Text, duration, fade, nextslice, dmxdata)
+            Await loadSliceCombo()
         Else
-            r = Await cls.updateSlice(r, slicename, duration, fade, dmxdata)
+            r = Await cls.updateSlice(r, slicename, duration, fade, nextslice, dmxdata)
         End If
 
+    End Sub
+
+    Private Async Function loadSliceCombo() As Task
+        Dim t As DataTable
+        t = Await cls.GetSlices()
+        cmboSliceSelect.DataSource = t
+        cmboSliceSelect.ValueMember = "_id"
+        cmboSliceSelect.DisplayMember = "name"
+        cmboSliceSelect.Text = ""
+    End Function
+
+
+
+    Private Async Sub btnRunSlice_Click(sender As Object, e As EventArgs) Handles btnRunSlice.Click
+        Dim d As DataTable
+        Dim a As Integer
+
+        ' load slice info
+        Dim r1 As DataRowView = cmboSliceSelect.SelectedItem
+        Dim slicename As String = r1(2)
+        Dim sliceid As String = r1(0)
+        Dim channelcount As String = txtChannelCount.Text
+
+        ' load current selected device info
+        Dim r2 As DataRowView = cmboDevice.SelectedItem
+        Dim startchannel As String = r2(2)
+
+
+        d = Await cls.GetSlice("_id", sliceid)
+
+        Dim name As String = d.Rows(0)("name")
+        Dim id As String = d.Rows(0)("_id")
+        Dim duration As String = d.Rows(0)("duration")
+        Dim fade As String = d.Rows(0)("fade")
+        Dim dmxstring As String = d.Rows(0)("dmxstring")
+        Dim nextslice As String = d.Rows(0)("nextslice")
+
+        ' decode dmxstring back to dmx byte array
+        dmxdata = System.Text.Encoding.Default.GetBytes(dmxstring)
+
+        ' set mixer board to match slice values for selected device
+        For a = 0 To channelcount - 1
+            Dim pb As TrackBar = Controls.Find("Ch" & a + 1, True).FirstOrDefault()
+
+            If dmxdata(startchannel + a) = Nothing Then
+                pb.Value = 0
+            Else
+                pb.Value = dmxdata(startchannel + a)
+            End If
+
+            Dim tc As TextBox = Controls.Find("txtCh" & a + 1, True).FirstOrDefault()
+            tc.Text = pb.Value
+
+        Next
+
+        ' send dmx
+        MainClass.sendDMXdata(dmxdata, 0)
+
+        ' populate mixer per device
+    End Sub
+
+    Private Sub btnDeviceOff_Click(sender As Object, e As EventArgs) Handles btnDeviceOff.Click
+        ResetSliders()
+    End Sub
+
+    Private Sub txtSliceName_KeyPress(sender As Object, e As KeyPressEventArgs) Handles txtSliceName.KeyPress
+        cmboSliceSelect.SelectedValue = ""
+    End Sub
+
+    Async Sub TabControl1_SelectedIndexChanged(sender As Object, e As EventArgs) Handles TabControl1.SelectedIndexChanged
+        Dim d1, d2 As New DataTable
+
+        If TabControl1.SelectedTab Is TabPage2 Then
+
+        End If
+
+
+        'fixtures tab
+        If TabControl1.SelectedTab Is TabPage4 Then
+            'load dmx fixture library
+            d1 = Await cls.GetDevices()
+            dgFixtures.DataSource = d1
+            dgFixtures.Columns("_id").Visible = False
+            If dgFixtures.RowCount > 0 Then
+                dgFixtures.Rows(0).Selected = True
+                Dim s As String = dgFixtures.Item(0, 0).Value
+                Await populateDG2(s)
+            End If
+        End If
+
+        ' board/mixer tab 
+        If TabControl1.SelectedTab Is TabPage5 Then
+
+            ' validation
+            If txtLayoutName.Text = "" Then
+                Using New Centered_MessageBox(Me)
+                    MessageBox.Show("Please select a device layout from the layouts tab")
+                End Using
+                Exit Sub
+            End If
+
+            'load scene library
+            d1 = Await cls.GetScenes()
+            cmboScenes.DataSource = d1
+            cmboScenes.ValueMember = "name"
+            cmboScenes.DisplayMember = "name"
+
+            ' load fixtures
+            If txtLayoutName.Text = "" Then
+                ' error validation
+            Else
+                d2 = Await cls.GetLayoutConfiguration("name", txtLayoutName.Text)
+                cmboDevice.DataSource = d2
+                cmboDevice.ValueMember = "devicealias"
+                cmboDevice.DisplayMember = "deviceref"
+            End If
+
+            ' populate slice panel controls
+            Dim t As DataTable
+            t = cls.LoadSliceCombos("duration")
+            cmboSliceDuration.DataSource = t
+            cmboSliceDuration.ValueMember = "item"
+            cmboSliceDuration.DisplayMember = "alias"
+            cmboSliceDuration.Text = ""
+
+            t = cls.LoadSliceCombos("fade")
+            cmboSliceFade.DataSource = t
+            cmboSliceFade.ValueMember = "item"
+            cmboSliceFade.DisplayMember = "alias"
+            cmboSliceFade.Text = ""
+
+            Await loadSliceCombo()
+        End If
+
+        ' scenes tab
+        If TabControl1.SelectedTab Is TabPage6 Then
+            'load scene library
+            d1 = Await cls.GetScenes()
+            dgScenes.DataSource = d1
+
+            cmboScenes.DataSource = d1
+            cmboScenes.ValueMember = "name"
+            cmboScenes.DisplayMember = "name"
+        End If
+
+        ' layouts tab
+        If TabControl1.SelectedTab Is TabPage7 Then
+
+            'load layout combo
+            Await LoadLocation()
+
+            'load dmx fixture library
+            d1 = Await cls.GetDevices()
+            dgavailabledevices.DataSource = d1
+            dgavailabledevices.Columns("_id").Visible = False
+            If dgavailabledevices.RowCount > 0 Then
+                dgavailabledevices.Rows(0).Selected = True
+            End If
+            ' populate drop down layout combo control
+
+        End If
+    End Sub
+
+    Private Async Sub btnDeleteCalls_Click(sender As Object, e As EventArgs) Handles btnDeleteCalls.Click
+        'Dim i = dgSliceCalls.CurrentRow.Index
+        Dim keyvalue As String '= dgSliceCalls.Item(0, i).Value
+        Dim r As Integer
+
+        Using New Centered_MessageBox(Me)
+            If MessageBox.Show("Are you sure you want to delete selected slice calls?", "Delete Confirmation", MessageBoxButtons.YesNo) = DialogResult.Yes Then
+                For Each row As DataGridViewRow In dgSliceCalls.SelectedRows
+                    keyvalue = dgSliceCalls.Rows(row.Index).Cells(0).Value
+                    r = Await cls.DeleteSliceCall(keyvalue)
+                Next
+
+                Await populateDG1(txtContentID.Text)
+
+            Else
+                Exit Sub
+            End If
+        End Using
+    End Sub
+
+    Private Async Sub dgSliceCalls_CellEndEdit(sender As Object, e As DataGridViewCellEventArgs) Handles dgSliceCalls.CellEndEdit
+        Dim keyvalue As String = dgSliceCalls.Rows(e.RowIndex).Cells(0).Value
+        Dim dgindex As Integer = e.RowIndex
+        Dim fieldname As String = ""
+        Dim fieldvalue As String = ""
+        Dim r As Integer
+
+        ' null check
+        If Not IsDBNull(dgSliceCalls.Columns(e.ColumnIndex).DataPropertyName) Then
+            fieldname = dgSliceCalls.Columns(e.ColumnIndex).DataPropertyName
+        End If
+        If Not IsDBNull(dgSliceCalls.Rows(e.RowIndex).Cells(e.ColumnIndex).Value) Then
+            fieldvalue = dgSliceCalls.Rows(e.RowIndex).Cells(e.ColumnIndex).Value
+        End If
+
+        ' update record
+        r = Await cls.UpdateSliceCallRecord(keyvalue, dgindex, fieldname, fieldvalue)
+    End Sub
+
+    Private Function ResetSliders()
+        Dim r As DataRowView = cmboDevice.SelectedItem
+        Dim startchannel As String = r(2)
+        Dim channelcount As String = txtChannelCount.Text
+        Dim a As Integer
+
+        For a = 1 To channelcount
+            Dim pb As TrackBar = Controls.Find("Ch" & a, True).FirstOrDefault()
+            pb.Value = 0
+
+            Dim tc As TextBox = Controls.Find("txtCh" & a, True).FirstOrDefault()
+            tc.Text = ""
+            tc.Text = "0"
+
+        Next
+    End Function
+
+
+    Private Sub btnAllDevicesOff_Click(sender As Object, e As EventArgs) Handles btnAllDevicesOff.Click
+        ResetSliders()
+
+        For x = 0 To UBound(dmxdata)
+            dmxdata(x) = 0
+        Next
     End Sub
 End Class

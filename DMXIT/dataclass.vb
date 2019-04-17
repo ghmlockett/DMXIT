@@ -11,6 +11,7 @@ Public Class dataclass
     Public coll2 As IMongoCollection(Of BsonDocument)
     Public coll3 As IMongoCollection(Of BsonDocument)
     Public coll4 As IMongoCollection(Of BsonDocument)
+    Public coll5 As IMongoCollection(Of BsonDocument)
 
     Public Function InitiateDb()
         Dim conn As String = ConfigurationManager.AppSettings("mongoDb").ToString()
@@ -21,6 +22,7 @@ Public Class dataclass
         coll2 = db.GetCollection(Of BsonDocument)("scenes")
         coll3 = db.GetCollection(Of BsonDocument)("layouts")
         coll4 = db.GetCollection(Of BsonDocument)("slices")
+        coll5 = db.GetCollection(Of BsonDocument)("slicecalls")
 
         Return 0
     End Function
@@ -368,6 +370,94 @@ Public Class dataclass
 
     End Function
 
+    Public Async Function GetSlice(keyname As String, keyvalue As String) As Task(Of DataTable)
+        Dim vCol As IMongoCollection(Of BsonDocument)
+        Dim o As JObject
+        vCol = db.GetCollection(Of BsonDocument)("slices")
+
+
+        Dim query As BsonDocument
+
+        Select Case keyname
+            Case "_id"
+                query = New BsonDocument("_id", New ObjectId(keyvalue))
+            Case Else
+                query = New BsonDocument(keyname, keyvalue)
+        End Select
+
+
+        Dim myList As List(Of BsonDocument) = Await vCol.Find(query).ToListAsync()
+
+
+        ' get all records
+        Dim Table As New DataTable
+        Table.Columns.Add("_id")
+        Table.Columns.Add("name")
+        Table.Columns.Add("duration")
+        Table.Columns.Add("fade")
+        Table.Columns.Add("nextslice")
+        Table.Columns.Add("dmxstring")
+
+
+        For Each Doc As BsonDocument In myList
+            Dim Dr As DataRow = Table.NewRow()
+            For Each element As BsonElement In Doc.Elements
+                Dim ColName As String = element.Name
+                Dim ColValue As BsonValue = element.Value
+
+                If Table.Columns.Contains(ColName) = True Then
+                    Dr(ColName) = ColValue
+                End If
+            Next
+            Table.Rows.Add(Dr)
+        Next
+
+        Return Table
+
+    End Function
+
+    Public Async Function GetSlices() As Task(Of DataTable)
+        Dim vCol As IMongoCollection(Of BsonDocument)
+        vCol = db.GetCollection(Of BsonDocument)("slices")
+
+
+        Dim query As BsonDocument
+        query = New BsonDocument()
+        'query = New BsonDocument("layout", slayout)
+
+        Dim myList As List(Of BsonDocument) = Await vCol.Find(query).ToListAsync()
+
+        ' get all records
+
+        Dim Table As New DataTable
+        Table.Columns.Add("_id")
+        Table.Columns.Add("name")
+        Table.Columns.Add("duration")
+        Table.Columns.Add("fade")
+        Table.Columns.Add("dmxstring")
+        'Table.Columns.Add("layout")
+
+
+        For Each Doc As BsonDocument In myList
+            Dim Dr As DataRow = Table.NewRow()
+            For Each element As BsonElement In Doc.Elements
+                Dim ColName As String = element.Name
+                Dim ColValue As BsonValue = element.Value
+
+                If Dr.Table.Columns.Contains(ColName) = True Then
+                    Dr(ColName) = ColValue
+                Else
+                    Table.Columns.Add(ColName)
+                    Dr(ColName) = ColValue
+                End If
+            Next
+            Table.Rows.Add(Dr)
+        Next
+
+        Return Table
+
+    End Function
+
     Public Async Function AddNewRecord(fieldvalue As String) As Task(Of Integer)
         Dim vCol As IMongoCollection(Of BsonDocument)
         Dim r As BsonDocument = New BsonDocument
@@ -416,6 +506,94 @@ Public Class dataclass
 
         ' insert record
         vCol.InsertOne(r)
+
+        Return 0
+
+    End Function
+
+    Public Async Function AddNewSliceCall(comment As String, position As String, contentid As Integer) As Task(Of Integer)
+        Dim vCol As IMongoCollection(Of BsonDocument)
+        Dim b As BsonDocument = New BsonDocument
+        Dim bsonlist As List(Of BsonDocument) = New List(Of BsonDocument)
+
+        ' get collection
+        vCol = db.GetCollection(Of BsonDocument)("slicecalls")
+
+        ' create bsondocument
+        b.Add("comment", comment)
+        b.Add("position", position)
+        b.Add("contentid", contentid)
+
+        ' insert record
+        vCol.InsertOne(b)
+
+        Return 0
+
+    End Function
+
+    Public Async Function GetSliceCalls(contentid As Integer) As Task(Of DataTable)
+        Dim vCol As IMongoCollection(Of BsonDocument)
+        vCol = db.GetCollection(Of BsonDocument)("slicecalls")
+
+
+        Dim query As BsonDocument
+        query = New BsonDocument()
+        query = New BsonDocument("contentid", contentid)
+
+        Dim myList As List(Of BsonDocument) = Await vCol.Find(query).ToListAsync()
+
+        ' get all records
+
+        Dim Table As New DataTable
+        Table.Columns.Add("_id")
+        Table.Columns.Add("comment")
+        Table.Columns.Add("position")
+        Table.Columns.Add("contentid")
+        Table.Columns.Add("slicename")
+        'Table.Columns.Add("layout")
+
+
+        For Each Doc As BsonDocument In myList
+            Dim Dr As DataRow = Table.NewRow()
+            For Each element As BsonElement In Doc.Elements
+                Dim ColName As String = element.Name
+                Dim ColValue As BsonValue = element.Value
+
+                If Dr.Table.Columns.Contains(ColName) = True Then
+                    Dr(ColName) = ColValue
+                End If
+            Next
+            Table.Rows.Add(Dr)
+        Next
+
+        Return Table
+
+    End Function
+
+    Public Async Function UpdateSliceCallRecord(keyvalue As String, dgindex As String, fieldname As String, fieldvalue As String) As Task(Of Integer)
+        Dim vCol As IMongoCollection(Of BsonDocument)
+
+        vCol = db.GetCollection(Of BsonDocument)("slicecalls")
+
+        Dim fltr = Builders(Of BsonDocument).Filter.Eq(Of ObjectId)("_id", New ObjectId(keyvalue))
+
+        ' update value if found
+        vCol.UpdateOne(fltr, New BsonDocument("$set", New BsonDocument(fieldname, fieldvalue)))
+
+        Return 0
+
+    End Function
+
+    Public Async Function DeleteSliceCall(keyvalue As String) As Task(Of Integer)
+        Dim vCol As IMongoCollection(Of BsonDocument)
+
+        vCol = db.GetCollection(Of BsonDocument)("slicecalls")
+
+
+        Dim fltr = Builders(Of BsonDocument).Filter.Eq(Of ObjectId)("_id", New ObjectId(keyvalue))
+
+        ' update value if found
+        vCol.DeleteMany(fltr)
 
         Return 0
 
@@ -479,7 +657,7 @@ Public Class dataclass
 
     End Function
 
-    Public Async Function saveSlice(slicename As String, duration As String, fade As String, dmxdata() As Byte) As Task(Of Integer)
+    Public Async Function saveNewSlice(slicename As String, duration As String, fade As String, nextslice As String, dmxdata() As Byte) As Task(Of Integer)
         Dim vCol As IMongoCollection(Of BsonDocument)
         vCol = db.GetCollection(Of BsonDocument)("slices")
 
@@ -494,6 +672,7 @@ Public Class dataclass
             .Add("name", slicename)
             .Add("duration", duration)
             .Add("fade", fade)
+            .Add("nextslice", nextslice)
             .Add("dmxstring", a)
         End With
 
@@ -503,21 +682,21 @@ Public Class dataclass
 
     End Function
 
-    Public Async Function updateSlice(sliceid As String, slicename As String, duration As String, fade As String, dmxdata() As Byte) As Task(Of Integer)
+    Public Async Function updateSlice(sliceid As String, slicename As String, duration As String, fade As String, nextslice As String, dmxdata() As Byte) As Task(Of Integer)
         Dim vCol As IMongoCollection(Of BsonDocument)
         vCol = db.GetCollection(Of BsonDocument)("slices")
 
 
-        ' define nested configuration array
+        ' encode dmx byte array to string
         Dim a As String = Text.Encoding.Default.GetString(dmxdata)
 
-        'Dim a1() As Byte = Text.Encoding.Default.GetBytes(a)
-
+        ' define nested configuration array
         Dim b As BsonDocument = New BsonDocument
         With b
             .Add("name", slicename)
             .Add("duration", duration)
             .Add("fade", fade)
+            .Add("nextslice", nextslice)
             .Add("dmxstring", a)
         End With
 
