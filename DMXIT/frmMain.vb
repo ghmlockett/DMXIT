@@ -1432,7 +1432,7 @@ Public Class frmMain
         Dim c3 As New DataGridViewTextBoxColumn
         With c3
             .DataPropertyName = "dmxfunctioncategory"
-            .HeaderText = "Category"
+            .HeaderText = "Channel Name"
             .Width = 140
             .MinimumWidth = 140
         End With
