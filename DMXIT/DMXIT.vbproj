@@ -152,6 +152,7 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
     <Compile Include="RotateText.vb" />
+    <Compile Include="ThreadManager.vb" />
     <Compile Include="USBDMXPro.vb" />
     <Compile Include="VerticalLabel.vb" />
   </ItemGroup>

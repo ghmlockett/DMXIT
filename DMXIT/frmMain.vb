@@ -1,6 +1,7 @@
 ﻿Imports DMXIT.USBDMXPro
 Imports System.Timers
 Imports System.Runtime.InteropServices
+Imports System.Threading
 Imports System.Drawing
 Imports System.IO
 Imports System.Configuration
@@ -16,6 +17,7 @@ Public Class frmMain
     Private posArrayCount As Integer = 0
     Private MainClass As New USBDMXPro
     Private cls As New dataclass
+    Private clsRun As New ThreadManager
     Private device As Integer
     Private Shared timer1Counter As Integer = 1
     Private Shared exitFlag As Boolean = False
@@ -81,6 +83,7 @@ Public Class frmMain
 
 
         status = MainClass.startDMX()
+
         If status = 0 Then
             Label2.Text = "Connected to DMX device"
             Label2.ForeColor = Color.Green
@@ -96,17 +99,11 @@ Public Class frmMain
         Else
             Label6.Text = ""
             Label6.ForeColor = Color.Green
+            status = clsRun.Initiate(cls, MainClass) ' initiate and pass in db class
         End If
 
         ' load default application settings
         txtLayoutName.Text = My.Settings.defaultLayout
-
-        'Dim _fixture As New datamodel.DmxFixture
-        '_fixture.name = "test name"
-        '_fixture.manufacturer = "test manufacturer"
-        '_fixture.model = "test model"
-
-        'Collection.InsertOne(_fixture)
 
         Timer2.Interval = 1000
 
@@ -135,7 +132,7 @@ Public Class frmMain
         Timer1.Start()
     End Sub
 
-    Private Sub Timer1_Process(sender As Object, e As EventArgs) Handles Timer1.Tick
+    Private Sub Timer1_Process(sender As Object, e As EventArgs)
 
         Select Case timer1Counter
             Case 1, 3, 5, 7
@@ -156,7 +153,7 @@ Public Class frmMain
 
     End Sub
 
-    Private Sub Timer2_Process(sender As Object, e As EventArgs) Handles Timer2.Tick
+    Private Sub Timer2_Process(sender As Object, e As EventArgs)
         test()
 
     End Sub
@@ -1502,7 +1499,7 @@ Public Class frmMain
     End Function
 
 
-    Private Async Sub wmProgressTimer_Tick(sender As Object, e As EventArgs) Handles wmProgressTimer.Tick
+    Private Async Sub wmProgressTimer_Tick(sender As Object, e As EventArgs)
         Dim currentposition As Double = AxWindowsMediaPlayer1.Ctlcontrols.currentPosition
         Dim keyvalue As String
 
@@ -2768,15 +2765,53 @@ Public Class frmMain
         r = Await cls.UpdateLayoutConfigRecord(s, dgindex, fieldname, fieldvalue)
     End Sub
 
-    Private Sub cmboSliceSelect_SelectedValueChanged(sender As Object, e As EventArgs) Handles cmboSliceSelect.SelectedValueChanged
+    Private Async Sub cmboSliceSelect_SelectedValueChanged(sender As Object, e As EventArgs) Handles cmboSliceSelect.SelectedValueChanged
+
+        ' load slice controls on page
+        Dim d As DataTable
+        Dim r1 As DataRowView = cmboSliceSelect.SelectedItem
+        Dim slicename As String
+        Dim sliceid As String
+
+        If IsNothing(r1) Then Exit Sub
+
+        slicename = r1(2)
+        sliceid = r1(0)
+
         ' clear slice name if existing slice selected to avoid user confusion
         txtSliceName.Text = ""
+
+        d = Await cls.GetSlice("_id", sliceid)
+
+        Dim duration As String = d.Rows(0)("duration")
+
+        ' calc duration value back to seconds
+        If duration <> "0" Then
+            Dim iduration As Integer = CInt(duration) / 1000
+            duration = iduration.ToString
+        End If
+
+        Dim fade As String = d.Rows(0)("fade")
+        Dim nextslice As String = d.Rows(0)("nextslice")
+        Dim dmxstring As String = d.Rows(0)("dmxstring")
+        Dim name As String = d.Rows(0)("name")
+
+        cmboSliceDuration.SelectedValue = duration
+        cmboSliceFade.SelectedValue = fade
+
+        cmboNextSlice.Text = ""
+        cmboNextSlice.ValueMember = "name"
+        cmboNextSlice.DisplayMember = "name"
+        cmboNextSlice.SelectedValue = nextslice
+
+        setSliders(name, sliceid, fade, duration, dmxstring)
+
     End Sub
 
     Private Async Sub btnSave_Click(sender As Object, e As EventArgs) Handles btnSave.Click
         Dim slicename As String
         Dim sliceid As String
-        Dim duration As String
+        Dim iduration As Long
         Dim fade As String
         Dim nextslice As String
         Dim r As String
@@ -2790,9 +2825,10 @@ Public Class frmMain
         End If
 
         ' get values
-        duration = cmboSliceDuration.SelectedValue
+        iduration = CLng(cmboSliceDuration.SelectedValue) * 1000 ' calculate duration in milliseconds
         fade = cmboSliceFade.Text
         nextslice = cmboNextSlice.Text
+
 
         ' get slice name
         If cmboSliceSelect.Text <> "" Then
@@ -2810,10 +2846,10 @@ Public Class frmMain
 
         If r = "000000000000000000000000" Then
             ' create new record
-            r = Await cls.saveNewSlice(txtSliceName.Text, duration, fade, nextslice, dmxdata)
+            r = Await cls.saveNewSlice(txtSliceName.Text, iduration.ToString, fade, nextslice, dmxdata)
             Await loadSliceCombo()
         Else
-            r = Await cls.updateSlice(r, slicename, duration, fade, nextslice, dmxdata)
+            r = Await cls.updateSlice(r, slicename, iduration.ToString, fade, nextslice, dmxdata)
         End If
 
     End Sub
@@ -2827,9 +2863,47 @@ Public Class frmMain
         cmboSliceSelect.Text = ""
     End Function
 
-
+    Private Async Function loadNextSliceCombo() As Task
+        Dim t As DataTable
+        t = Await cls.GetSlices(True)
+        cmboNextSlice.DataSource = t
+        cmboNextSlice.ValueMember = "_id"
+        cmboNextSlice.DisplayMember = "name"
+        cmboNextSlice.Text = ""
+    End Function
 
     Private Async Sub btnRunSlice_Click(sender As Object, e As EventArgs) Handles btnRunSlice.Click
+        Await runSlice()
+    End Sub
+
+    Public Function setSliders(slicename As String, sliceid As String, fade As String, duration As String, dmxstring As String)
+        Dim a As Integer
+
+        ' load info
+        Dim channelcount As String = txtChannelCount.Text
+        Dim r2 As DataRowView = cmboDevice.SelectedItem
+        Dim startchannel As String = r2(2)
+
+
+        ' decode dmxstring back to dmx byte array
+        dmxdata = System.Text.Encoding.Default.GetBytes(dmxstring)
+
+        ' set mixer board to match slice values for selected device
+        For a = 0 To channelcount - 1
+            Dim pb As TrackBar = Controls.Find("Ch" & a + 1, True).FirstOrDefault()
+
+            If dmxdata(startchannel + a) = Nothing Then
+                pb.Value = 0
+            Else
+                pb.Value = dmxdata(startchannel + a)
+            End If
+
+            Dim tc As TextBox = Controls.Find("txtCh" & a + 1, True).FirstOrDefault()
+            tc.Text = pb.Value
+        Next
+    End Function
+
+    Public Async Function runSlice() As Task
         Dim d As DataTable
         Dim a As Integer
 
@@ -2853,29 +2927,17 @@ Public Class frmMain
         Dim dmxstring As String = d.Rows(0)("dmxstring")
         Dim nextslice As String = d.Rows(0)("nextslice")
 
-        ' decode dmxstring back to dmx byte array
-        dmxdata = System.Text.Encoding.Default.GetBytes(dmxstring)
-
-        ' set mixer board to match slice values for selected device
-        For a = 0 To channelcount - 1
-            Dim pb As TrackBar = Controls.Find("Ch" & a + 1, True).FirstOrDefault()
-
-            If dmxdata(startchannel + a) = Nothing Then
-                pb.Value = 0
-            Else
-                pb.Value = dmxdata(startchannel + a)
-            End If
-
-            Dim tc As TextBox = Controls.Find("txtCh" & a + 1, True).FirstOrDefault()
-            tc.Text = pb.Value
-
-        Next
+        ' reset sliders
+        setSliders(name, id, fade, duration, dmxstring)
 
         ' send dmx
         MainClass.sendDMXdata(dmxdata, 0)
 
+        ' open new thread and load slice
+
         ' populate mixer per device
-    End Sub
+    End Function
+
 
     Private Sub btnDeviceOff_Click(sender As Object, e As EventArgs) Handles btnDeviceOff.Click
         ResetSliders()
@@ -2948,6 +3010,7 @@ Public Class frmMain
             cmboSliceFade.Text = ""
 
             Await loadSliceCombo()
+            Await loadNextSliceCombo()
         End If
 
         ' scenes tab
@@ -3031,7 +3094,6 @@ Public Class frmMain
             Dim tc As TextBox = Controls.Find("txtCh" & a, True).FirstOrDefault()
             tc.Text = ""
             tc.Text = "0"
-
         Next
     End Function
 
@@ -3042,5 +3104,88 @@ Public Class frmMain
         For x = 0 To UBound(dmxdata)
             dmxdata(x) = 0
         Next
+
+    End Sub
+
+    Private Async Sub btnRunSliceChain_Click(sender As Object, e As EventArgs) Handles btnRunSliceChain.Click
+        Dim d As DataTable
+        Dim a As Integer
+
+        ' load slice info
+        Dim r1 As DataRowView = cmboSliceSelect.SelectedItem
+        Dim slicename As String = r1(2)
+        Dim sliceid As String = r1(0)
+        Dim channelcount As String = txtChannelCount.Text
+
+        ' load current selected device info
+        Dim r2 As DataRowView = cmboDevice.SelectedItem
+        Dim startchannel As String = r2(2)
+
+
+        d = Await cls.GetSlice("_id", sliceid)
+
+        Dim name As String = d.Rows(0)("name")
+        Dim id As String = d.Rows(0)("_id")
+        Dim duration As String = d.Rows(0)("duration")
+        Dim fade As String = d.Rows(0)("fade")
+        Dim dmxstring As String = d.Rows(0)("dmxstring")
+        Dim nextslice As String = d.Rows(0)("nextslice")
+
+        ' decode dmxstring back to dmx byte array
+        dmxdata = System.Text.Encoding.Default.GetBytes(dmxstring)
+
+        ' set mixer board to match slice values for selected device
+        For a = 0 To channelcount - 1
+            Dim pb As TrackBar = Controls.Find("Ch" & a + 1, True).FirstOrDefault()
+
+            If dmxdata(startchannel + a) = Nothing Then
+                pb.Value = 0
+            Else
+                pb.Value = dmxdata(startchannel + a)
+            End If
+
+            Dim tc As TextBox = Controls.Find("txtCh" & a + 1, True).FirstOrDefault()
+            tc.Text = pb.Value
+        Next
+
+        ' send slice object to run buffer
+        clsRun.runSliceChain(name)
+
+        ' populate mixer per device
+
+    End Sub
+
+    Private Async Sub btnLoadNextSlice_Click(sender As Object, e As EventArgs) Handles btnLoadNextSlice.Click
+        Dim d As DataTable
+
+
+        Dim r1 As DataRowView = cmboNextSlice.SelectedItem
+        Dim slicename As String = r1(2)
+        Dim sliceid As String = r1(0)
+        Dim channelcount As String = txtChannelCount.Text
+
+        ' load current selected device info
+        Dim r2 As DataRowView = cmboDevice.SelectedItem
+        Dim startchannel As String = r2(2)
+
+
+        d = Await cls.GetSlice("_id", sliceid)
+
+        Dim name As String = d.Rows(0)("name")
+        Dim id As String = d.Rows(0)("_id")
+        Dim duration As String = d.Rows(0)("duration")
+        Dim fade As String = d.Rows(0)("fade")
+        Dim dmxstring As String = d.Rows(0)("dmxstring")
+        Dim nextslice As String = d.Rows(0)("nextslice")
+
+        ' reset sliders
+        setSliders(name, id, fade, duration, dmxstring)
+
+        ' send dmx
+        MainClass.sendDMXdata(dmxdata, 0)
+
+        ' open new thread and load slice
+
+        ' populate mixer per device
     End Sub
 End Class

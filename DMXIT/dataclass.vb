@@ -416,7 +416,7 @@ Public Class dataclass
 
     End Function
 
-    Public Async Function GetSlices() As Task(Of DataTable)
+    Public Async Function GetSlices(Optional addblank As Boolean = False) As Task(Of DataTable)
         Dim vCol As IMongoCollection(Of BsonDocument)
         vCol = db.GetCollection(Of BsonDocument)("slices")
 
@@ -437,6 +437,16 @@ Public Class dataclass
         Table.Columns.Add("dmxstring")
         'Table.Columns.Add("layout")
 
+        ' add blank row for user to select
+        If addblank = True Then
+            Dim r As DataRow = Table.NewRow()
+            r("_id") = ""
+            r("name") = ""
+            r("duration") = ""
+            r("fade") = ""
+            r("dmxstring") = ""
+            Table.Rows.Add(r)
+        End If
 
         For Each Doc As BsonDocument In myList
             Dim Dr As DataRow = Table.NewRow()
