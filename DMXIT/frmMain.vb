@@ -19,9 +19,13 @@ Public Class frmMain
     Private cls As New dataclass
     Private clsRun As New ThreadManager
     Private device As Integer
+    Private sendFlag As Boolean = True
+    Private blackoutTgl As Boolean = False
+    Private blackoutInEffect As Boolean = False
     Private Shared timer1Counter As Integer = 1
     Private Shared exitFlag As Boolean = False
     Public Shared dmxdata(0 To 511) As Byte
+    Public Shared dmxdatastore(0 To 511) As Byte
     Private dmx1Value As Boolean = False
     Private dmx2Value As Boolean = False
     Private dmx3Value As Boolean = False
@@ -1734,8 +1738,10 @@ Public Class frmMain
         MainClass.sendDMXdata(dmxdata)
     End Sub
 
-    Private Sub lblCh1_Click(sender As Object, e As EventArgs)
-
+    Private Sub SendDmx(dmxdata() As Byte)
+        If sendFlag = True Then
+            MainClass.sendDMXdata(dmxdata)
+        End If
     End Sub
 
     Private Sub txtCh1_TextChanged(sender As Object, e As EventArgs) Handles txtCh1.TextChanged
@@ -1751,7 +1757,11 @@ Public Class frmMain
 
             ' get and send dmx
             dmxdata(s + 0) = CInt(txtCh1.Text)
-            MainClass.sendDMXdata(dmxdata)
+
+            If blackoutTgl = False Then
+                SendDmx(dmxdata)
+            End If
+
         End If
     End Sub
 
@@ -1768,7 +1778,11 @@ Public Class frmMain
 
             ' get and send dmx
             dmxdata(s + 1) = CInt(txtCh2.Text)
-            MainClass.sendDMXdata(dmxdata)
+
+            If blackoutTgl = False Then
+                SendDmx(dmxdata)
+            End If
+
         End If
     End Sub
 
@@ -1785,7 +1799,11 @@ Public Class frmMain
 
             ' get and send dmx
             dmxdata(s + 2) = CInt(txtCh3.Text)
-            MainClass.sendDMXdata(dmxdata)
+
+            If blackoutTgl = False Then
+                SendDmx(dmxdata)
+            End If
+
         End If
     End Sub
 
@@ -1802,7 +1820,11 @@ Public Class frmMain
 
             ' get and send dmx
             dmxdata(s + 3) = CInt(txtCh4.Text)
-            MainClass.sendDMXdata(dmxdata)
+
+            If blackoutTgl = False Then
+                SendDmx(dmxdata)
+            End If
+
         End If
     End Sub
 
@@ -1819,7 +1841,11 @@ Public Class frmMain
 
             ' get and send dmx
             dmxdata(s + 4) = CInt(txtCh5.Text)
-            MainClass.sendDMXdata(dmxdata)
+
+            If blackoutTgl = False Then
+                SendDmx(dmxdata)
+            End If
+
         End If
     End Sub
 
@@ -1836,7 +1862,11 @@ Public Class frmMain
 
             ' get and send dmx
             dmxdata(s + 5) = CInt(txtCh6.Text)
-            MainClass.sendDMXdata(dmxdata)
+
+            If blackoutTgl = False Then
+                SendDmx(dmxdata)
+            End If
+
         End If
     End Sub
 
@@ -1853,7 +1883,11 @@ Public Class frmMain
 
             ' get and send dmx
             dmxdata(s + 6) = CInt(txtCh7.Text)
-            MainClass.sendDMXdata(dmxdata)
+
+            If blackoutTgl = False Then
+                SendDmx(dmxdata)
+            End If
+
         End If
     End Sub
 
@@ -1870,7 +1904,11 @@ Public Class frmMain
 
             ' get and send dmx
             dmxdata(s + 7) = CInt(txtCh8.Text)
-            MainClass.sendDMXdata(dmxdata)
+
+            If blackoutTgl = False Then
+                SendDmx(dmxdata)
+            End If
+
         End If
     End Sub
 
@@ -1887,7 +1925,11 @@ Public Class frmMain
 
             ' get and send dmx
             dmxdata(s + 8) = CInt(txtCh9.Text)
-            MainClass.sendDMXdata(dmxdata)
+
+            If blackoutTgl = False Then
+                SendDmx(dmxdata)
+            End If
+
         End If
     End Sub
 
@@ -1904,7 +1946,11 @@ Public Class frmMain
 
             ' get and send dmx
             dmxdata(s + 9) = CInt(txtCh10.Text)
-            MainClass.sendDMXdata(dmxdata)
+
+            If blackoutTgl = False Then
+                SendDmx(dmxdata)
+            End If
+
         End If
     End Sub
 
@@ -1921,7 +1967,11 @@ Public Class frmMain
 
             ' get and send dmx
             dmxdata(s + 10) = CInt(txtCh11.Text)
-            MainClass.sendDMXdata(dmxdata)
+
+            If blackoutTgl = False Then
+                SendDmx(dmxdata)
+            End If
+
         End If
     End Sub
 
@@ -1938,7 +1988,11 @@ Public Class frmMain
 
             ' get and send dmx
             dmxdata(s + 11) = CInt(txtCh12.Text)
-            MainClass.sendDMXdata(dmxdata)
+
+            If blackoutTgl = False Then
+                SendDmx(dmxdata)
+            End If
+
         End If
     End Sub
 
@@ -1955,7 +2009,11 @@ Public Class frmMain
 
             ' get and send dmx
             dmxdata(s + 12) = CInt(txtCh13.Text)
-            MainClass.sendDMXdata(dmxdata)
+
+            If blackoutTgl = False Then
+                SendDmx(dmxdata)
+            End If
+
         End If
     End Sub
 
@@ -1972,7 +2030,11 @@ Public Class frmMain
 
             ' get and send dmx
             dmxdata(s + 13) = CInt(txtCh14.Text)
-            MainClass.sendDMXdata(dmxdata)
+
+            If blackoutTgl = False Then
+                SendDmx(dmxdata)
+            End If
+
         End If
     End Sub
 
@@ -1989,7 +2051,11 @@ Public Class frmMain
 
             ' get and send dmx
             dmxdata(s + 14) = CInt(txtCh15.Text)
-            MainClass.sendDMXdata(dmxdata)
+
+            If blackoutTgl = False Then
+                SendDmx(dmxdata)
+            End If
+
         End If
     End Sub
 
@@ -2006,7 +2072,11 @@ Public Class frmMain
 
             ' get and send dmx
             dmxdata(s + 15) = CInt(txtCh16.Text)
-            MainClass.sendDMXdata(dmxdata)
+
+            If blackoutTgl = False Then
+                SendDmx(dmxdata)
+            End If
+
         End If
     End Sub
 
@@ -2023,7 +2093,11 @@ Public Class frmMain
 
             ' get and send dmx
             dmxdata(s + 16) = CInt(txtCh17.Text)
-            MainClass.sendDMXdata(dmxdata)
+
+            If blackoutTgl = False Then
+                SendDmx(dmxdata)
+            End If
+
         End If
     End Sub
 
@@ -2040,98 +2114,120 @@ Public Class frmMain
 
             ' get and send dmx
             dmxdata(s + 17) = CInt(txtCh18.Text)
-            MainClass.sendDMXdata(dmxdata)
+
+            If blackoutTgl = False Then
+                SendDmx(dmxdata)
+            End If
+
         End If
     End Sub
 
     Private Sub ch1_Scroll(sender As Object, e As EventArgs) Handles ch1.Scroll
         Dim trkBar As TrackBar = CType(sender, TrackBar)
-        'Set timer value based on the Selection
+
+        sendFlag = True
         txtCh1.Text = trkBar.Value
     End Sub
     Private Sub ch2_Scroll(sender As Object, e As EventArgs) Handles ch2.Scroll
         Dim trkBar As TrackBar = CType(sender, TrackBar)
-        'Set timer value based on the Selection
+
+        sendFlag = True
         txtCh2.Text = trkBar.Value
     End Sub
     Private Sub ch3_Scroll(sender As Object, e As EventArgs) Handles ch3.Scroll
         Dim trkBar As TrackBar = CType(sender, TrackBar)
-        'Set timer value based on the Selection
+
+        sendFlag = True
         txtCh3.Text = trkBar.Value
     End Sub
     Private Sub ch4_Scroll(sender As Object, e As EventArgs) Handles ch4.Scroll
         Dim trkBar As TrackBar = CType(sender, TrackBar)
-        'Set timer value based on the Selection
+
+        sendFlag = True
         txtCh4.Text = trkBar.Value
     End Sub
     Private Sub ch5_Scroll(sender As Object, e As EventArgs) Handles ch5.Scroll
         Dim trkBar As TrackBar = CType(sender, TrackBar)
-        'Set timer value based on the Selection
+
+        sendFlag = True
         txtCh5.Text = trkBar.Value
     End Sub
     Private Sub ch6_Scroll(sender As Object, e As EventArgs) Handles ch6.Scroll
         Dim trkBar As TrackBar = CType(sender, TrackBar)
-        'Set timer value based on the Selection
+
+        sendFlag = True
         txtCh6.Text = trkBar.Value
     End Sub
     Private Sub ch7_Scroll(sender As Object, e As EventArgs) Handles ch7.Scroll
         Dim trkBar As TrackBar = CType(sender, TrackBar)
-        'Set timer value based on the Selection
+
+        sendFlag = True
         txtCh7.Text = trkBar.Value
     End Sub
     Private Sub ch8_Scroll(sender As Object, e As EventArgs) Handles ch8.Scroll
         Dim trkBar As TrackBar = CType(sender, TrackBar)
-        'Set timer value based on the Selection
+
+        sendFlag = True
         txtCh8.Text = trkBar.Value
     End Sub
     Private Sub ch9_Scroll(sender As Object, e As EventArgs) Handles ch9.Scroll
         Dim trkBar As TrackBar = CType(sender, TrackBar)
-        'Set timer value based on the Selection
+
+        sendFlag = True
         txtCh9.Text = trkBar.Value
     End Sub
     Private Sub ch10_Scroll(sender As Object, e As EventArgs) Handles ch10.Scroll
         Dim trkBar As TrackBar = CType(sender, TrackBar)
-        'Set timer value based on the Selection
+
+        sendFlag = True
         txtCh10.Text = trkBar.Value
     End Sub
     Private Sub ch11_Scroll(sender As Object, e As EventArgs) Handles ch11.Scroll
         Dim trkBar As TrackBar = CType(sender, TrackBar)
-        'Set timer value based on the Selection
+
+        sendFlag = True
         txtCh11.Text = trkBar.Value
     End Sub
     Private Sub ch12_Scroll(sender As Object, e As EventArgs) Handles ch12.Scroll
         Dim trkBar As TrackBar = CType(sender, TrackBar)
-        'Set timer value based on the Selection
+
+        sendFlag = True
         txtCh12.Text = trkBar.Value
     End Sub
     Private Sub ch13_Scroll(sender As Object, e As EventArgs) Handles ch13.Scroll
         Dim trkBar As TrackBar = CType(sender, TrackBar)
-        'Set timer value based on the Selection
+
+        sendFlag = True
         txtCh13.Text = trkBar.Value
     End Sub
     Private Sub ch14_Scroll(sender As Object, e As EventArgs) Handles ch14.Scroll
         Dim trkBar As TrackBar = CType(sender, TrackBar)
-        'Set timer value based on the Selection
+
+        sendFlag = True
         txtCh14.Text = trkBar.Value
     End Sub
     Private Sub ch15_Scroll(sender As Object, e As EventArgs) Handles ch15.Scroll
         Dim trkBar As TrackBar = CType(sender, TrackBar)
-        'Set timer value based on the Selection
+
+        sendFlag = True
         txtCh15.Text = trkBar.Value
     End Sub
     Private Sub ch16_Scroll(sender As Object, e As EventArgs) Handles ch16.Scroll
         Dim trkBar As TrackBar = CType(sender, TrackBar)
-        'Set timer value based on the Selection
+
+        sendFlag = True
         txtCh16.Text = trkBar.Value
     End Sub
     Private Sub ch17_Scroll(sender As Object, e As EventArgs) Handles ch17.Scroll
         Dim trkBar As TrackBar = CType(sender, TrackBar)
-        'Set timer value based on the Selection
+
+        sendFlag = True
         txtCh17.Text = trkBar.Value
     End Sub
     Private Sub ch18_Scroll(sender As Object, e As EventArgs) Handles ch18.Scroll
         Dim trkBar As TrackBar = CType(sender, TrackBar)
-        'Set timer value based on the Selection
+
+        sendFlag = True
         txtCh18.Text = trkBar.Value
     End Sub
 
@@ -2435,74 +2531,92 @@ Public Class frmMain
     End Sub
 
     Private Sub txtCh1_MouseClick(sender As Object, e As MouseEventArgs) Handles txtCh1.MouseClick
+        sendFlag = True
         txtCh1.SelectAll()
     End Sub
 
     Private Sub txtCh2_MouseClick(sender As Object, e As MouseEventArgs) Handles txtCh2.MouseClick
+        sendFlag = True
         txtCh2.SelectAll()
     End Sub
 
     Private Sub txtCh3_MouseClick(sender As Object, e As MouseEventArgs) Handles txtCh3.MouseClick
+        sendFlag = True
         txtCh3.SelectAll()
     End Sub
 
     Private Sub txtCh4_MouseClick(sender As Object, e As MouseEventArgs) Handles txtCh4.MouseClick
+        sendFlag = True
         txtCh4.SelectAll()
     End Sub
 
     Private Sub txtCh5_MouseClick(sender As Object, e As MouseEventArgs) Handles txtCh5.MouseClick
+        sendFlag = True
         txtCh5.SelectAll()
     End Sub
 
     Private Sub txtCh6_MouseClick(sender As Object, e As MouseEventArgs) Handles txtCh6.MouseClick
+        sendFlag = True
         txtCh6.SelectAll()
     End Sub
 
     Private Sub txtCh7_MouseClick(sender As Object, e As MouseEventArgs) Handles txtCh7.MouseClick
+        sendFlag = True
         txtCh7.SelectAll()
     End Sub
 
     Private Sub txtCh8_MouseClick(sender As Object, e As MouseEventArgs) Handles txtCh8.MouseClick
+        sendFlag = True
         txtCh8.SelectAll()
     End Sub
 
     Private Sub txtCh9_MouseClick(sender As Object, e As MouseEventArgs) Handles txtCh9.MouseClick
+        sendFlag = True
         txtCh9.SelectAll()
     End Sub
 
     Private Sub txtCh10_MouseClick(sender As Object, e As MouseEventArgs) Handles txtCh10.MouseClick
+        sendFlag = True
         txtCh10.SelectAll()
     End Sub
 
     Private Sub txtCh11_MouseClick(sender As Object, e As MouseEventArgs) Handles txtCh11.MouseClick
+        sendFlag = True
         txtCh11.SelectAll()
     End Sub
 
     Private Sub txtCh12_MouseClick(sender As Object, e As MouseEventArgs) Handles txtCh12.MouseClick
+        sendFlag = True
         txtCh12.SelectAll()
     End Sub
 
     Private Sub txtCh13_MouseClick(sender As Object, e As MouseEventArgs) Handles txtCh13.MouseClick
+        sendFlag = True
         txtCh13.SelectAll()
     End Sub
 
     Private Sub txtCh14_MouseClick(sender As Object, e As MouseEventArgs) Handles txtCh14.MouseClick
+        sendFlag = True
         txtCh14.SelectAll()
     End Sub
 
     Private Sub txtCh15_MouseClick(sender As Object, e As MouseEventArgs) Handles txtCh15.MouseClick
+        sendFlag = True
         txtCh15.SelectAll()
     End Sub
 
     Private Sub txtCh16_MouseClick(sender As Object, e As MouseEventArgs) Handles txtCh16.MouseClick
+        sendFlag = True
         txtCh16.SelectAll()
     End Sub
 
     Private Sub txtCh17_MouseClick(sender As Object, e As MouseEventArgs) Handles txtCh17.MouseClick
+        sendFlag = True
         txtCh17.SelectAll()
     End Sub
 
     Private Sub txtCh18_MouseClick(sender As Object, e As MouseEventArgs) Handles txtCh18.MouseClick
+        sendFlag = True
         txtCh18.SelectAll()
     End Sub
 
@@ -2772,6 +2886,8 @@ Public Class frmMain
         Dim r1 As DataRowView = cmboSliceSelect.SelectedItem
         Dim slicename As String
         Dim sliceid As String
+        Dim ldmxdata() As Byte
+
 
         If IsNothing(r1) Then Exit Sub
 
@@ -2796,6 +2912,9 @@ Public Class frmMain
         Dim dmxstring As String = d.Rows(0)("dmxstring")
         Dim name As String = d.Rows(0)("name")
 
+        ' decode dmxstring back to dmx byte array
+        ldmxdata = System.Text.Encoding.Default.GetBytes(dmxstring)
+
         cmboSliceDuration.SelectedValue = duration
         cmboSliceFade.SelectedValue = fade
 
@@ -2804,7 +2923,8 @@ Public Class frmMain
         cmboNextSlice.DisplayMember = "name"
         cmboNextSlice.SelectedValue = nextslice
 
-        setSliders(name, sliceid, fade, duration, dmxstring)
+        sendFlag = False ' stage, but do not send dmx
+        setSliders(ldmxdata)
 
     End Sub
 
@@ -2852,31 +2972,55 @@ Public Class frmMain
             r = Await cls.updateSlice(r, slicename, iduration.ToString, fade, nextslice, dmxdata)
         End If
 
+        ' reload next slice combo
+        Await loadNextSliceCombo(nextslice)
+
     End Sub
 
     Private Async Function loadSliceCombo() As Task
         Dim t As DataTable
+        Dim dv As New DataView
+
         t = Await cls.GetSlices()
+
+        ' sort datatable by name
+        dv = t.DefaultView
+        dv.Sort = "name"
+        t = dv.ToTable
+
         cmboSliceSelect.DataSource = t
         cmboSliceSelect.ValueMember = "_id"
         cmboSliceSelect.DisplayMember = "name"
         cmboSliceSelect.Text = ""
     End Function
 
-    Private Async Function loadNextSliceCombo() As Task
+    Private Async Function loadNextSliceCombo(Optional name As String = "") As Task
         Dim t As DataTable
+        Dim dv As New DataView
+
+
         t = Await cls.GetSlices(True)
+
+        ' sort datatable by name
+        dv = t.DefaultView
+        dv.Sort = "name"
+        t = dv.ToTable
+
         cmboNextSlice.DataSource = t
         cmboNextSlice.ValueMember = "_id"
         cmboNextSlice.DisplayMember = "name"
-        cmboNextSlice.Text = ""
+        If name = "" Then
+            cmboNextSlice.Text = ""
+        Else
+            cmboNextSlice.SelectedText = name
+        End If
     End Function
 
     Private Async Sub btnRunSlice_Click(sender As Object, e As EventArgs) Handles btnRunSlice.Click
         Await runSlice()
     End Sub
 
-    Public Function setSliders(slicename As String, sliceid As String, fade As String, duration As String, dmxstring As String)
+    Public Function setSliders(ldmxdata() As Byte)
         Dim a As Integer
 
         ' load info
@@ -2885,17 +3029,14 @@ Public Class frmMain
         Dim startchannel As String = r2(2)
 
 
-        ' decode dmxstring back to dmx byte array
-        dmxdata = System.Text.Encoding.Default.GetBytes(dmxstring)
-
         ' set mixer board to match slice values for selected device
         For a = 0 To channelcount - 1
             Dim pb As TrackBar = Controls.Find("Ch" & a + 1, True).FirstOrDefault()
 
-            If dmxdata(startchannel + a) = Nothing Then
+            If ldmxdata(startchannel + a) = Nothing Then
                 pb.Value = 0
             Else
-                pb.Value = dmxdata(startchannel + a)
+                pb.Value = ldmxdata(startchannel + a)
             End If
 
             Dim tc As TextBox = Controls.Find("txtCh" & a + 1, True).FirstOrDefault()
@@ -2906,6 +3047,7 @@ Public Class frmMain
     Public Async Function runSlice() As Task
         Dim d As DataTable
         Dim a As Integer
+        Dim ldmxdata() As Byte
 
         ' load slice info
         Dim r1 As DataRowView = cmboSliceSelect.SelectedItem
@@ -2927,8 +3069,11 @@ Public Class frmMain
         Dim dmxstring As String = d.Rows(0)("dmxstring")
         Dim nextslice As String = d.Rows(0)("nextslice")
 
+        ' decode dmxstring back to dmx byte array
+        ldmxdata = System.Text.Encoding.Default.GetBytes(dmxstring)
+
         ' reset sliders
-        setSliders(name, id, fade, duration, dmxstring)
+        setSliders(ldmxdata)
 
         ' send dmx
         MainClass.sendDMXdata(dmxdata, 0)
@@ -2940,6 +3085,7 @@ Public Class frmMain
 
 
     Private Sub btnDeviceOff_Click(sender As Object, e As EventArgs) Handles btnDeviceOff.Click
+        sendFlag = True
         ResetSliders()
     End Sub
 
@@ -3099,11 +3245,14 @@ Public Class frmMain
 
 
     Private Sub btnAllDevicesOff_Click(sender As Object, e As EventArgs) Handles btnAllDevicesOff.Click
-        ResetSliders()
+
+        sendFlag = True
 
         For x = 0 To UBound(dmxdata)
             dmxdata(x) = 0
         Next
+
+        ResetSliders()
 
     End Sub
 
@@ -3157,12 +3306,19 @@ Public Class frmMain
 
     Private Async Sub btnLoadNextSlice_Click(sender As Object, e As EventArgs) Handles btnLoadNextSlice.Click
         Dim d As DataTable
-
-
+        Dim ldmxdata() As Byte
         Dim r1 As DataRowView = cmboNextSlice.SelectedItem
-        Dim slicename As String = r1(2)
+        Dim slicename As String = r1(1)
         Dim sliceid As String = r1(0)
         Dim channelcount As String = txtChannelCount.Text
+
+
+        If sliceid = "" Then
+            Using New Centered_MessageBox(Me)
+                MessageBox.Show("There is no next slice to load yet")
+            End Using
+            Exit Sub
+        End If
 
         ' load current selected device info
         Dim r2 As DataRowView = cmboDevice.SelectedItem
@@ -3178,8 +3334,11 @@ Public Class frmMain
         Dim dmxstring As String = d.Rows(0)("dmxstring")
         Dim nextslice As String = d.Rows(0)("nextslice")
 
+        ' decode dmxstring back to dmx byte array
+        ldmxdata = System.Text.Encoding.Default.GetBytes(dmxstring)
+
         ' reset sliders
-        setSliders(name, id, fade, duration, dmxstring)
+        setSliders(ldmxdata)
 
         ' send dmx
         MainClass.sendDMXdata(dmxdata, 0)
@@ -3187,5 +3346,39 @@ Public Class frmMain
         ' open new thread and load slice
 
         ' populate mixer per device
+    End Sub
+
+    Private Sub btnBlackoutTgl_Click(sender As Object, e As EventArgs) Handles btnBlackoutTgl.Click
+
+        Select Case blackoutTgl
+            Case True
+                blackoutTgl = False
+
+                ' restore stored array
+                Array.Copy(dmxdatastore, dmxdata, dmxdatastore.Length)
+
+                ' restore backcolor gold
+                btnBlackoutTgl.BackColor = Color.Transparent
+
+                setSliders(dmxdata)
+
+            Case False
+
+                ' store array
+                Array.Copy(dmxdata, dmxdatastore, dmxdata.Length)
+
+                ' set backcolor gold
+                btnBlackoutTgl.BackColor = Color.Gold
+
+                For x = 0 To UBound(dmxdata)
+                    dmxdata(x) = 0
+                Next
+
+                ResetSliders()
+
+                blackoutTgl = True
+
+        End Select
+
     End Sub
 End Class
